@@ -78,7 +78,7 @@ class CycleGANModel(BaseModel):
         # self.netG_B = networks.define_G(opt.output_nc, opt.input_nc, opt.ngf, opt.netG, opt.norm,
         #                                 not opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids)
       
-        self.generator_sections=meta.network.define_resnet_sections(opt.num_options_each_layer,opt.input_nc,opt.output_nc,opt.ngf,opt.norm,not opt.no_dropout,8,"reflect",opt.init_type,opt.init_gain,self.gpu_ids)
+        self.generator_sections=meta.network.define_resnet_sections2(opt.num_options_each_layer,opt.num_shared,opt.input_nc,opt.output_nc,opt.ngf,opt.norm,not opt.no_dropout,8,"reflect",opt.init_type,opt.init_gain,self.gpu_ids)
        
         shape=(opt.input_nc,opt.crop_size,opt.crop_size)
         

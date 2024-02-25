@@ -116,6 +116,55 @@ def init_net(net, init_type='normal', init_gain=0.02, gpu_ids=[]):
         net = torch.nn.DataParallel(net, gpu_ids)  # multi-GPUs
     init_weights(net, init_type, init_gain=init_gain)
     return net
+def define_resnet_generator2(input_nc, output_nc, ngf=64, norm_layer=nn.BatchNorm2d, use_dropout=False, n_blocks=6, padding_type='reflect',*,downsamples,blocks,upsamples,num_shared):
+    if type(norm_layer) == functools.partial:
+        use_bias = norm_layer.func == nn.InstanceNorm2d
+    else:
+        use_bias = norm_layer == nn.InstanceNorm2d
+
+    downsamples.extend_layers( [nn.ReflectionPad2d(3),
+                nn.Conv2d(input_nc, ngf, kernel_size=7, padding=0, bias=use_bias),
+                norm_layer(ngf),
+                nn.ReLU(True)])
+
+    n_downsampling = 2
+    for i in range(n_downsampling):  # add downsampling layers
+        mult = 2 ** i
+        downsamples.extend_layers( [nn.Conv2d(ngf * mult, ngf * mult * 2, kernel_size=3, stride=2, padding=1, bias=use_bias),
+                    norm_layer(ngf * mult * 2),
+                    nn.ReLU(True)])
+
+
+    mult = 2 ** n_downsampling
+    
+    blocks.append_layer(ResnetBlock(ngf * mult, padding_type=padding_type, norm_layer=norm_layer, use_dropout=use_dropout, use_bias=use_bias))
+    for i in range(n_blocks-1):       # add ResNet blocks
+        blocks.append_shared_layers(0,num_shared)
+        #blocks += [ResnetBlock(ngf * mult, padding_type=padding_type, norm_layer=norm_layer, use_dropout=use_dropout, use_bias=use_bias)]
+
+    for i in range(n_downsampling):  # add upsampling layers
+        mult = 2 ** (n_downsampling - i)
+        upsamples.extend_layers( [nn.ConvTranspose2d(ngf * mult, int(ngf * mult / 2),
+                                        kernel_size=3, stride=2,
+                                        padding=1, output_padding=1,
+                                        bias=use_bias),
+                    norm_layer(int(ngf * mult / 2)),
+                    nn.ReLU(True)])
+    upsamples.extend_layers( [nn.ReflectionPad2d(3)])
+    upsamples .extend_layers( [nn.Conv2d(ngf, output_nc, kernel_size=7, padding=0)])
+    upsamples .extend_layers( [nn.Tanh()])
+def define_resnet_sections2(num_options_each_layer,num_shared,input_nc, output_nc, ngf, norm, use_dropout=False, n_blocks=6, padding_type='reflect', init_type='normal', init_gain=0.02, gpu_ids=[]):
+    downsample_layers=[]
+    resnet_blocks=[]
+    upsample_layers=[]
+    downsample_section=Section("downsample",downsample_layers,num_options_each_layer)
+    resnet_section= Section("resnet",resnet_blocks,num_options_each_layer)
+    upsample_section= Section("upsample",upsample_layers,num_options_each_layer)
+    define_resnet_generator2(input_nc, output_nc, ngf, get_norm_layer(norm_type=norm) , use_dropout, n_blocks, padding_type,downsamples= downsample_section,blocks= resnet_section,upsamples=upsample_section,num_shared=num_shared)
+    sections= [downsample_section,resnet_section,upsample_section]
+    for section in sections:
+        init_net(section, init_type, init_gain, gpu_ids)
+    return sections
 def define_resnet_generator(input_nc, output_nc, ngf=64, norm_layer=nn.BatchNorm2d, use_dropout=False, n_blocks=6, padding_type='reflect',*,downsamples,blocks,upsamples):
     
         if type(norm_layer) == functools.partial:

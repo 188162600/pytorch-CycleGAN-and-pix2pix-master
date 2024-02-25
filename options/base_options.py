@@ -30,6 +30,8 @@ class BaseOptions():
         parser.add_argument('--input_nc', type=int, default=3, help='# of input image channels: 3 for RGB and 1 for grayscale')
         parser.add_argument('--output_nc', type=int, default=3, help='# of output image channels: 3 for RGB and 1 for grayscale')
         parser.add_argument('--ngf', type=int, default=64, help='# of gen filters in the last conv layer')
+        #parser.add_argument('--num_options', type=int, default=8, help='# of options in each layer')
+        parser.add_argument('--num_shared', type=int, default=4, help='# of shared layers')
         
         parser.add_argument('--encoder_min_nc', type=int, default=64, help='# of encoder filters in the first conv layer')
         parser.add_argument('--encoder_max_nc', type=int, default=128, help='# of encoder filters in the first conv layer')

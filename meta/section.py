@@ -12,6 +12,8 @@ class Section(nn.Module):
     def __init__(self,name,layers:typing.List[nn.Module],num_options_each_layer,is_encoder=lambda x:isinstance(x,nn.Conv2d)) -> None:
         super().__init__()
         self.base_layers=layers
+        self.num_shared_layers=[]
+        self.shared_index=[]
         self.is_setup=False
         self.num_options_each_layer=num_options_each_layer
         self.name=name
@@ -20,12 +22,20 @@ class Section(nn.Module):
         self.last_sections_steps=[]
         self.is_encoder=is_encoder
         self.step_classifier_encoder=None
-     
+        
         self.features=None
     def append_layer(self,layer):
         self.base_layers.append(layer)
-    def append_layers(self,layers):
-        self.base_layers.extend(layers)
+        self.num_shared_layers.append(0)
+        self.shared_index.append(None)
+    def append_shared_layers(self,index,num_shared_layers):
+        self.base_layers.append(self.base_layers[index])
+        self.num_shared_layers.append(num_shared_layers)
+        self.shared_index.append(index)
+        
+    def extend_layers(self,layers):
+        for layer in layers:
+            self.append_layer(layer)
     def set_step_classifier_encoder(self,encoder):
         self.step_classifier_encoder=encoder
     def setup(self):
@@ -37,10 +47,18 @@ class Section(nn.Module):
         self.num_layers_with_params=0
         self.num_total_layers=0
         self.last_feature_index=None
-        for layer in self.base_layers:
-            self.layers.append([copy.deepcopy(layer) for i in range(self.num_options_each_layer)])
-            for j,layer in  enumerate(self.layers[-1]):
-                self.register_module(f"{self.num_total_layers},{j}",layer)
+        for i,layer in enumerate(self.base_layers):
+            print("shared",self.shared_index,i)
+            shared_index=self.shared_index[i]
+            num_shared_layers=self.num_shared_layers[i]
+            layers=[self.layers[shared_index][j] for j in range(num_shared_layers)]
+            
+            for j  in range(self.num_options_each_layer-num_shared_layers):
+               
+                new_layer=copy.deepcopy(layer)
+                self.register_module(f"{i},{j}",new_layer)
+                layers.append(new_layer)
+            self.layers.append(layers)
 
             if self.is_encoder(layer):
                 self.last_feature_index=self.num_total_layers
