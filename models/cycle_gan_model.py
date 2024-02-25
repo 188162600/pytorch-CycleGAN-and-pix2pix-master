@@ -65,10 +65,10 @@ class CycleGANModel(BaseModel):
         # specify the models you want to save to the disk. The training/test scripts will call <BaseModel.save_networks> and <BaseModel.load_networks>.
         if self.isTrain:
             self.model_names = ['D_A', 'D_B']
-            self.task_names=['task_G_A','task_G_B']
+            self.task_names=['G_A','G_B']
         else:  # during test time, only load Gs
             self.model_names = []
-            self.task_names=['task_G_A','task_G_B']
+            self.task_names=['G_A','G_B']
 
         # define networks (both Generators and discriminators)
         # The naming is different from those used in the paper.
