@@ -36,7 +36,6 @@ class Task:
         
     def extend_sections(self,sections):
         for section in sections:
-            
             self.append_section(section)
     def setup(self):
        
@@ -54,18 +53,14 @@ class Task:
     def save_network(self,path,saved_sections:set):
         for section in self.sections:
             if not section.name in saved_sections:
-                saved_sections.update(section.name)
-                section.save_network(os.path.join(path,f"section_{section.name}.pth"))
-          
+                saved_sections.append(section.name)
+                torch.save(section,os.path.join(path,f"section_{section.name}"))
     
     def load_network(self,path,sections:list,loaded_sections:set):
         for section in sections:
-            if not section.name in loaded_sections:
-                loaded_sections.update(section.name)
-                section.load_network(os.path.join(path,f"section_{section.name}.pth"))
-                
-                
-            
+            if not section in loaded_sections:
+                section=torch.load(os.path.join(path,f"section_{section.name}"))
+                loaded_sections.append(section.name)
                
             
     def eval(self):

@@ -11,7 +11,7 @@ from meta.next_steps import NextStepClassifier
 class Section(nn.Module):
     def __init__(self,name,layers:typing.List[nn.Module],num_options_each_layer,is_encoder=lambda x:isinstance(x,nn.Conv2d)) -> None:
         super().__init__()
-        self.base_layers=[]
+        self.base_layers=layers
         self.num_shared_layers=[]
         self.shared_index=[]
         self.is_setup=False
@@ -22,39 +22,8 @@ class Section(nn.Module):
         self.last_sections_steps=[]
         self.is_encoder=is_encoder
         self.step_classifier_encoder=None
-        self.extend_layers(layers)
         
         self.features=None
-    def save_network(self,path):
-        state={
-            "name":self.name,
-            "last_sections_encode_shapes":self.last_sections_encode_shapes,
-            "last_sections_steps":self.last_sections_steps,
-            "step_classifier_encoder":self.step_classifier_encoder,
-            "base_layers":self.base_layers,
-            "is_setup":self.is_setup,
-            "classifier":self.classifier,
-            "num_total_layers":self.num_total_layers,
-            "is_layer_with_params":self.is_layer_with_params,
-            "layers":self.layers,
-            "last_feature_index":self.last_feature_index,
-            
-        }
-        torch.save(state,path)
-    def load_network(self,path):
-        state=torch.load(path)
-        self.name=state["name"]
-        self.last_sections_encode_shapes=state["last_sections_encode_shapes"]
-        self.last_sections_steps=state["last_sections_steps"]
-        self.step_classifier_encoder=state["step_classifier_encoder"]
-        self.base_layers=state["base_layers"]
-        self.is_setup=state["is_setup"]
-        self.classifier=state["classifier"]
-        self.num_total_layers=state["num_total_layers"]
-        self.is_layer_with_params=state["is_layer_with_params"]
-        self.layers=state["layers"]
-        self.last_feature_index=state["last_feature_index"]
-        
     def append_layer(self,layer):
         self.base_layers.append(layer)
         self.num_shared_layers.append(0)
@@ -152,7 +121,7 @@ class Section(nn.Module):
       
         #print("features",features.shape)
         #print("section features--",features.device)
-        
+       
         next_steps=self.classifier.forward(features,previous_steps,task)
         #print("after forward",next_steps.tensor.shape)
         self.next_steps=next_steps
@@ -168,8 +137,7 @@ class Section(nn.Module):
             #print("index i",index,i)
             #print(next_steps.indices)
             #print(index)
-            #print("layers",len(self.layers),i)
-            #print(len(self.layers[i]))
+
             layer=self.layers[i][index]
             data=layer(data)
             #print("data",data.device)
