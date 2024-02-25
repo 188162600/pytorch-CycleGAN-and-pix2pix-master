@@ -51,18 +51,18 @@ class Task:
             for layers in section.layers:
                 for layer in layers:
                     layer.to(self.device)
-    def save_network(self,path,saved_sections:set):
+    def save_network(self,path,epoch,saved_sections:set):
         for section in self.sections:
             if not section.name in saved_sections:
                 saved_sections.update(section.name)
-                section.save_network(os.path.join(path,f"section_{section.name}.pth"))
+                section.save_network(os.path.join(path,f"{epoch}_section_{section.name}.pth"))
           
     
-    def load_network(self,path,sections:list,loaded_sections:set):
+    def load_network(self,path,epoch,sections:list,loaded_sections:set):
         for section in sections:
             if not section.name in loaded_sections:
                 loaded_sections.update(section.name)
-                section.load_network(os.path.join(path,f"section_{section.name}.pth"))
+                section.load_network(os.path.join(path,f"{epoch}_section_{section.name}.pth"))
                 
                 
             

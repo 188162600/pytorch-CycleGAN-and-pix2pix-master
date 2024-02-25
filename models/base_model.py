@@ -189,7 +189,7 @@ class BaseModel(ABC):
         for name in self.task_names:
             saved_sections=set()
             task=getattr(self, 'task_' + name)
-            task.save_network(self.save_dir,saved_sections)
+            task.save_network(self.save_dir,epoch,saved_sections)
             
 
     def __patch_instance_norm_state_dict(self, state_dict, module, keys, i=0):
@@ -233,7 +233,7 @@ class BaseModel(ABC):
         for name in self.task_names:
             loaded_sections=set()
             task=getattr(self, 'task_' + name)
-            task.load_network(self.save_dir,task.sections,loaded_sections)
+            task.load_network(self.save_dir,epoch,task.sections,loaded_sections)
 
     def print_networks(self, verbose):
         """Print the total number of parameters in the network and (if verbose) network architecture
