@@ -86,7 +86,7 @@ class CycleGANModel(BaseModel):
         self.task_G_B=meta.task.Task(shape,self.device,[])
         for section in self.generator_sections:
             
-            section.set_step_classifier_encoder(meta.network.create_conv_sequence_until_size(self.task_G_A.dummy_features[0].shape,64,128,30000,7,2,3))
+            section.set_step_classifier_encoder(meta.network.create_conv_sequence_until_size(self.task_G_A.dummy_features[0].shape,self.opt.encoder_min_nc,self.opt.encoder_max_nc,self.opt.max_encode_features,7,2,3))
             self.task_G_A.append_section(section)
             self.task_G_B.append_section(section)
         
