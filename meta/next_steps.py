@@ -48,7 +48,7 @@ class NextStepClassifier(nn.Module):
         #print("init num step classes",num_step_classes)
 
 
-    def forward(self, features, previous: torch.Tensor | NextSteps, task):
+    def forward(self, features, previous:NextSteps, task):
         # print("classifier vars",vars(self))
         # print("")
         # print("forward", self.nets, features)

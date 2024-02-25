@@ -3,7 +3,7 @@ import torch
 import os
 from meta.section import Section
 from meta.next_steps import NextSteps
-from torchviz import make_dot
+# from torchviz import make_dot
 class Task:
     def __init__(self,input_shape,device,sections:list) -> None:
        
