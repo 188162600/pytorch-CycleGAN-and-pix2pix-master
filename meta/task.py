@@ -25,7 +25,8 @@ class Task:
         print("dummy",self.dummy_features.numel() if self.dummy_features is not None else 0)
         if self.dummy_features is not None:
             section.last_sections_encode_shapes.append(self.dummy_features.shape[1:])
-       
+        else:
+            section.last_sections_encode_shapes.append(self.dummy_input.shape[1:])
         self.dummy_input=section.dummy_forward(self.dummy_input)
         if section.features is not None:
             self.dummy_features=section.features
@@ -108,6 +109,8 @@ class Task:
                 #print("features",section.features[0].shape)
                 last_features_shape=section.features[0].shape
                 last_features=section.features[0].unsqueeze(0)
+            else:
+                last_features=data
             last_section_steps=section.next_steps
 
             self.results.append(data)

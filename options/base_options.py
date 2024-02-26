@@ -24,14 +24,14 @@ class BaseOptions():
         parser.add_argument('--name', type=str, default='experiment_name', help='name of the experiment. It decides where to store samples and models')
         parser.add_argument('--gpu_ids', type=str, default='0', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
         parser.add_argument('--checkpoints_dir', type=str, default='./checkpoints', help='models are saved here')
-        parser.add_argument('--num_options_each_layer', type=int, default='8')
+        parser.add_argument('--num_options_each_layer', type=int, default=4)
         # model parameters
         parser.add_argument('--model', type=str, default='cycle_gan', help='chooses which model to use. [cycle_gan | pix2pix | test | colorization]')
         parser.add_argument('--input_nc', type=int, default=3, help='# of input image channels: 3 for RGB and 1 for grayscale')
         parser.add_argument('--output_nc', type=int, default=3, help='# of output image channels: 3 for RGB and 1 for grayscale')
         parser.add_argument('--ngf', type=int, default=64, help='# of gen filters in the last conv layer')
         #parser.add_argument('--num_options', type=int, default=8, help='# of options in each layer')
-        parser.add_argument('--num_shared', type=int, default=4, help='# of shared layers')
+        parser.add_argument('--num_shared', type=int, default=2, help='# of shared layers')
         
         parser.add_argument('--encoder_min_nc', type=int, default=64, help='# of encoder filters in the first conv layer')
         parser.add_argument('--encoder_max_nc', type=int, default=128, help='# of encoder filters in the first conv layer')
