@@ -5,6 +5,10 @@ import functools
 from torch.optim import lr_scheduler
 from meta.task import Task
 from meta.section import Section
+from meta.resnet_encoder import find_resnet_encoder
+def define_resnet_encoder(name,**kwargs):
+    return find_resnet_encoder(name)(**kwargs)
+
 def create_conv_sequence_until_size(initial_shape,min_initial_channels,max_channel,target_size,kernel_shape, stride, padding):
     """
     Automatically add Conv2d layers to a sequential model until the output shape is less than or equal to target_shape.
@@ -117,6 +121,7 @@ def init_net(net, init_type='normal', init_gain=0.02, gpu_ids=[]):
     init_weights(net, init_type, init_gain=init_gain)
     return net
 def define_resnet_generator2(input_nc, output_nc, ngf=64, norm_layer=nn.BatchNorm2d, use_dropout=False, n_blocks=6, padding_type='reflect',*,downsamples,blocks,upsamples,num_shared):
+    assert len(num_shared)==3
     if type(norm_layer) == functools.partial:
         use_bias = norm_layer.func == nn.InstanceNorm2d
     else:
@@ -139,7 +144,7 @@ def define_resnet_generator2(input_nc, output_nc, ngf=64, norm_layer=nn.BatchNor
     
     blocks.append_layer(ResnetBlock(ngf * mult, padding_type=padding_type, norm_layer=norm_layer, use_dropout=use_dropout, use_bias=use_bias))
     for i in range(n_blocks-1):       # add ResNet blocks
-        blocks.append_shared_layers(0,num_shared)
+        blocks.append_shared_layers(0,num_shared[1])
         #blocks += [ResnetBlock(ngf * mult, padding_type=padding_type, norm_layer=norm_layer, use_dropout=use_dropout, use_bias=use_bias)]
 
     for i in range(n_downsampling):  # add upsampling layers
@@ -154,12 +159,13 @@ def define_resnet_generator2(input_nc, output_nc, ngf=64, norm_layer=nn.BatchNor
     upsamples .extend_layers( [nn.Conv2d(ngf, output_nc, kernel_size=7, padding=0)])
     upsamples .extend_layers( [nn.Tanh()])
 def define_resnet_sections2(num_options_each_layer,num_shared,input_nc, output_nc, ngf, norm, use_dropout=False, n_blocks=6, padding_type='reflect', init_type='normal', init_gain=0.02, gpu_ids=[]):
+    assert len(num_options_each_layer)==3
     downsample_layers=[]
     resnet_blocks=[]
     upsample_layers=[]
-    downsample_section=Section("downsample",downsample_layers,num_options_each_layer)
-    resnet_section= Section("resnet",resnet_blocks,num_options_each_layer)
-    upsample_section= Section("upsample",upsample_layers,num_options_each_layer)
+    downsample_section=Section("downsample",downsample_layers,num_options_each_layer[0])
+    resnet_section= Section("resnet",resnet_blocks,num_options_each_layer[1])
+    upsample_section= Section("upsample",upsample_layers,num_options_each_layer[2])
     define_resnet_generator2(input_nc, output_nc, ngf, get_norm_layer(norm_type=norm) , use_dropout, n_blocks, padding_type,downsamples= downsample_section,blocks= resnet_section,upsamples=upsample_section,num_shared=num_shared)
     sections= [downsample_section,resnet_section,upsample_section]
     for section in sections:

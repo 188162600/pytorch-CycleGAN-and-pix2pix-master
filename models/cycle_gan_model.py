@@ -77,16 +77,20 @@ class CycleGANModel(BaseModel):
         #                                 not opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids)
         # self.netG_B = networks.define_G(opt.output_nc, opt.input_nc, opt.ngf, opt.netG, opt.norm,
         #                                 not opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids)
-      
-        self.generator_sections=meta.network.define_resnet_sections2(opt.num_options_each_layer,opt.num_shared,opt.input_nc,opt.output_nc,opt.ngf,opt.norm,not opt.no_dropout,8,"reflect",opt.init_type,opt.init_gain,self.gpu_ids)
+          
+     
+        self.generator_sections=meta.network.define_resnet_sections2([opt.num_options_downsample,opt.num_options_blocks,opt.num_options_upsample],
+                                                                     [opt.num_shared_downsample,opt.num_shared_blocks,opt.num_shared_upsample],
+                                                                     opt.input_nc,opt.output_nc,opt.ngf,opt.norm,not opt.no_dropout,8,"reflect",opt.init_type,opt.init_gain,self.gpu_ids)
        
         shape=(opt.input_nc,opt.crop_size,opt.crop_size)
         
         self.task_G_A=meta.task.Task(shape,self.device,[])
         self.task_G_B=meta.task.Task(shape,self.device,[])
-        for section in self.generator_sections:
-            
-            section.set_step_classifier_encoder(meta.network.create_conv_sequence_until_size(self.task_G_A.dummy_features[0].shape,self.opt.encoder_min_nc,self.opt.encoder_max_nc,self.opt.max_encode_features,7,2,3))
+        encoders=[opt.downsample_step_classifier_encoder,opt.blocks_step_classifier_encoder,opt.upsample_step_classifier_encoder]
+        for i,section in enumerate( self.generator_sections):
+            channels=self.task_G_A.dummy_features.size(1)
+            section.set_step_classifier_encoder(meta.network.define_resnet_encoder(encoders[i],input_channels=channels))
             self.task_G_A.append_section(section)
             self.task_G_B.append_section(section)
         

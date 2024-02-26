@@ -67,6 +67,9 @@ class Section(nn.Module):
     def extend_layers(self,layers):
         for layer in layers:
             self.append_layer(layer)
+    def extend_shared_layers(self,indices,num_shared_layers):
+        for i in indices:
+            self.append_shared_layers(i,num_shared_layers)
     def set_step_classifier_encoder(self,encoder):
         self.step_classifier_encoder=encoder
     def setup(self):

@@ -5,6 +5,7 @@ import functools
 from torch.optim import lr_scheduler
 from meta.task import Task
 from meta.section import Section
+
 def create_conv_sequence_until_size(initial_shape,min_initial_channels,max_channel,target_size,kernel_shape, stride, padding):
     """
     Automatically add Conv2d layers to a sequential model until the output shape is less than or equal to target_shape.
