@@ -13,7 +13,7 @@ See our template dataset class 'template_dataset.py' for more details.
 import importlib
 import torch.utils.data
 from data.base_dataset import BaseDataset
-
+import  random
 
 def find_dataset_using_name(dataset_name):
     """Import the module "data/[dataset_name]_dataset.py".
@@ -58,31 +58,87 @@ def create_dataset(opt):
     dataset = data_loader.load_data()
     return dataset
 def create_datasets(opt):
-    datasets=dict()
-    for name,dataroot in zip( opt.names,opt.dataroot):
-        
-        data_loader = CustomDatasetDataLoader(opt,dataroot)
-        dataset = data_loader.load_data()
-        datasets.update({name: dataset})
-    return datasets
+    
+
+    data_loader = CustomDatasetDataLoader(opt)
+    dataset = data_loader.load_data()
+      
+    return dataset
+class ChainedDataset(torch.utils.data.Dataset):
+    def __init__(self, datasets):
+        self.datasets = datasets
+        self.len = sum(len(d) for d in datasets)
+
+    def __getitem__(self, index):
+        for dataset in self.datasets:
+            if index < len(dataset):
+                #print("index",index,dataset[index])
+                return dataset[index]
+            index -= len(dataset)
+        raise IndexError("Index out of range")
+
+    def __len__(self):
+        return self.len
+
+import random
+
+class BoundaryAwareBatchSampler:
+    def __init__(self, datasets, batch_size, shuffle):
+        self.datasets = datasets
+        self.batch_size = batch_size
+        self.shuffle = shuffle
+        self.batches = self._generate_batches()
+
+    def _generate_batches(self):
+        batches = []
+        for dataset in self.datasets:
+            dataset_indices = list(range(len(dataset)))
+            # Ensure the last batch is not smaller than the batch size
+            if len(dataset_indices) % self.batch_size != 0:
+                dataset_indices = dataset_indices[:-(len(dataset_indices) % self.batch_size)]
+            # Split dataset indices into batches
+            dataset_batches = [dataset_indices[i:i + self.batch_size] for i in range(0, len(dataset_indices), self.batch_size)]
+            batches.extend(dataset_batches)
+        return batches
+
+    def __iter__(self):
+        if self.shuffle:
+            random.shuffle(self.batches)  # Shuffle the batches
+        for batch in self.batches:
+            yield batch
+
+    def __len__(self):
+        return len(self.batches)
+
 class CustomDatasetDataLoader():
     """Wrapper class of Dataset class that performs multi-threaded data loading"""
 
-    def __init__(self, opt,dataroot):
+    def __init__(self, opt):
+        
         """Initialize this class
 
         Step 1: create a dataset instance given the name [dataset_mode]
         Step 2: create a multi-threaded data loader.
         """
+
         self.opt = opt
+        
         dataset_class = find_dataset_using_name(opt.dataset_mode)
-        self.dataset = dataset_class(opt,dataroot)
-        print("dataset [%s] was created" % type(self.dataset).__name__)
+        #print("datasetclass",dataset_class)
+        datasets=[]
+        #print("opt.names",opt.names,opt.dataroot)
+        for name,dataroot in zip( opt.names,opt.dataroot):
+            
+            dataset = dataset_class(opt,dataroot,name)
+            print("dataset [%s] was created" % type(dataset).__name__)
+            datasets.append(dataset)
+        self.dataset=ChainedDataset(datasets)
+
+        batch_sampler = BoundaryAwareBatchSampler(datasets, batch_size=opt.batch_size,shuffle=not opt.serial_batches)
+        #print(self.dataset,"dataset")
         self.dataloader = torch.utils.data.DataLoader(
             self.dataset,
-            batch_size=opt.batch_size,
-            shuffle=not opt.serial_batches,
-            num_workers=int(opt.num_threads))
+            batch_sampler=batch_sampler)
 
     def load_data(self):
         return self

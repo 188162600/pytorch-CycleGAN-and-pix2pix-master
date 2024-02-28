@@ -128,7 +128,7 @@ class CycleGANModel(BaseModel):
             
    
 
-    def set_input(self, input,name):
+    def set_input(self, input):
         """Unpack input data from the dataloader and perform necessary pre-processing steps.
 
         Parameters:
@@ -136,13 +136,19 @@ class CycleGANModel(BaseModel):
 
         The option 'direction' can be used to swap domain A and domain B.
         """
+        #print("input",input,input['name'])
+        names=input['name']
+        name=names[0]
+        assert all(i==name for i in names)
         data=self.all_data[name]
+
+        self.current_data=data
         AtoB = self.opt.direction == 'AtoB'
         data.real_A = input['A' if AtoB else 'B'].to(self.device)
         data.real_B = input['B' if AtoB else 'A'].to(self.device)
         data.image_paths = input['A_paths' if AtoB else 'B_paths']
 
-    def forward(self,name):
+    def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
         # self.fake_B = self.netG_A(self.real_A)  # G_A(A)
         # self.rec_A = self.netG_B(self.fake_B)   # G_B(G_A(A))
@@ -164,7 +170,7 @@ class CycleGANModel(BaseModel):
         # self.rec_B=self.task_G_A.forward(self.fake_A,track_loss=True)
         # self.steps_rec_B=self.task_G_A.previous_steps
         #print("self.real_A",self.real_A.device)
-        data=self.all_data[name]
+        data=self.current_data
         data.fake_B=data.task_G_A.forward2(data.real_A)
         #self.fake_B_each_section=self.task_G_A.get_results()
         data.fake_B_steps=data.task_G_A.previous_steps
@@ -313,11 +319,11 @@ class CycleGANModel(BaseModel):
         
      
 
-    def optimize_parameters(self,name):
+    def optimize_parameters(self):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
-        data=self.all_data[name]
+        data=self.current_data
         # forward
-        self.forward(name)      # compute fake images and reconstruction images.
+        self.forward()      # compute fake images and reconstruction images.
         # G_A and G_B
         
         self.set_requires_grad([data.netD_A, data.netD_B], False)  # Ds require no gradients when optimizing Gs
