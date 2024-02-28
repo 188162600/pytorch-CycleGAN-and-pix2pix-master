@@ -20,8 +20,9 @@ class BaseOptions():
     def initialize(self, parser):
         """Define the common options that are used in both training and test."""
         # basic parameters
-        parser.add_argument('--dataroot', required=True, help='path to images (should have subfolders trainA, trainB, valA, valB, etc)')
-        parser.add_argument('--name', type=str, default='experiment_name', help='name of the experiment. It decides where to store samples and models')
+        parser.add_argument('--dataroot',type=str,action='append',default=[],required=True, help='path to images (should have subfolders trainA, trainB, valA, valB, etc)')
+        parser.add_argument('--project_name', type=str, default=None, help='name of the experiment. It decides where to store samples and models')
+        parser.add_argument('--names', type=str, action='append', default=[], required=True,help='name of the experiment. It decides where to store samples and models')
         parser.add_argument('--gpu_ids', type=str, default='0', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
         parser.add_argument('--checkpoints_dir', type=str, default='./checkpoints', help='models are saved here')
         
@@ -34,7 +35,7 @@ class BaseOptions():
         parser.add_argument('--upsample_step_classifier_encoder', type=str, default="resnet50")
        
         parser.add_argument('--num_options_blocks', type=int, default=12)
-        parser.add_argument('--num_shared_blocks', type=int, default=4)
+        parser.add_argument('--num_shared_blocks', type=int, default=8)
         parser.add_argument('--blocks_step_classifier_encoder', type=str, default="resnet50")
         
         # model parameters
@@ -126,17 +127,21 @@ class BaseOptions():
         print(message)
 
         # save to the disk
-        expr_dir = os.path.join(opt.checkpoints_dir, opt.name)
+        #print(opt.names)
+        #for name in opt.names:
+        expr_dir = os.path.join(opt.checkpoints_dir, opt.project_name)
         util.mkdirs(expr_dir)
-        file_name = os.path.join(expr_dir, '{}_opt.txt'.format(opt.phase))
+        file_name = os.path.join(expr_dir, 'opt.txt')
         with open(file_name, 'wt') as opt_file:
             opt_file.write(message)
             opt_file.write('\n')
-
+       
     def parse(self):
         """Parse our options, create checkpoints directory suffix, and set up gpu device."""
         opt = self.gather_options()
         opt.isTrain = self.isTrain   # train or test
+        if opt.project_name is None:
+            opt.project_name = '+'.join(opt.names)
 
         # process opt.suffix
         if opt.suffix:
@@ -154,6 +159,10 @@ class BaseOptions():
                 opt.gpu_ids.append(id)
         if len(opt.gpu_ids) > 0:
             torch.cuda.set_device(opt.gpu_ids[0])
+        # if isinstance( opt.names,str):
+        #     opt.names=[opt.names]
+        # if isinstance(opt.dataroot,str):
+        #     opt.dataroot=[opt.dataroot]
         print(torch.cuda.get_device_name(id))
 
         self.opt = opt

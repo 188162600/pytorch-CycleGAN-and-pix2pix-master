@@ -52,11 +52,12 @@ class NextStepClassifier(nn.Module):
         # print("classifier vars",vars(self))
         # print("")
         # print("forward", self.nets, features)
-
+        #print("Next Steps Features",features.shape)
         batch = features.size(0)
         #print("encoder",self.encoder)
         #print("features device",features.device)
         features=self.encoder(features)
+        #print("Next Steps Features encode",features.shape)
         features=features.view(batch,-1)
         features_size=features[0].numel()
         
@@ -94,7 +95,7 @@ class NextStepClassifier(nn.Module):
         #print("hidden", batch, self.num_step_classes, self.num_next_steps, self.num_previous_steps)
         for net in self.nets:
             #print("forward2", net, features.shape, hx.shape, cx.shape)
-
+            #print("forward2",features.shape,hx.shape,cx.shape)
             hx, cx = net(features, (hx, cx))
             #print("forward2 result", net, features.shape, hx.shape, cx.shape)
         hx=hx.view(batch, self.num_step_classes, self.num_next_steps)

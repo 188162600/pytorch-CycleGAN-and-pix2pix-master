@@ -57,12 +57,18 @@ def create_dataset(opt):
     data_loader = CustomDatasetDataLoader(opt)
     dataset = data_loader.load_data()
     return dataset
-
-
+def create_datasets(opt):
+    datasets=dict()
+    for name,dataroot in zip( opt.names,opt.dataroot):
+        
+        data_loader = CustomDatasetDataLoader(opt,dataroot)
+        dataset = data_loader.load_data()
+        datasets.update({name: dataset})
+    return datasets
 class CustomDatasetDataLoader():
     """Wrapper class of Dataset class that performs multi-threaded data loading"""
 
-    def __init__(self, opt):
+    def __init__(self, opt,dataroot):
         """Initialize this class
 
         Step 1: create a dataset instance given the name [dataset_mode]
@@ -70,7 +76,7 @@ class CustomDatasetDataLoader():
         """
         self.opt = opt
         dataset_class = find_dataset_using_name(opt.dataset_mode)
-        self.dataset = dataset_class(opt)
+        self.dataset = dataset_class(opt,dataroot)
         print("dataset [%s] was created" % type(self.dataset).__name__)
         self.dataloader = torch.utils.data.DataLoader(
             self.dataset,

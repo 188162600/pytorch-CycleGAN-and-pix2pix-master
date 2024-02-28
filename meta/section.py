@@ -157,6 +157,7 @@ class Section(nn.Module):
         #print("section features--",features.device)
         
         next_steps=self.classifier.forward(features,previous_steps,task)
+        
         #print("after forward",next_steps.tensor.shape)
         self.next_steps=next_steps
         #print("len(self.layers),self.num_total_layers",len(self.layers),self.num_total_layers)

@@ -29,11 +29,13 @@ class BaseModel(ABC):
             -- self.visual_names (str list):        specify the images that you want to display and save.
             -- self.optimizers (optimizer list):    define and initialize optimizers. You can define one optimizer for each network. If two networks are updated at the same time, you can use itertools.chain to group them. See cycle_gan_model.py for an example.
         """
+        
         self.opt = opt
         self.gpu_ids = opt.gpu_ids
         self.isTrain = opt.isTrain
         self.device = torch.device('cuda:{}'.format(self.gpu_ids[0])) if self.gpu_ids else torch.device('cpu')  # get device name: CPU or GPU
-        self.save_dir = os.path.join(opt.checkpoints_dir, opt.name)  # save all the checkpoints to save_dir
+        
+        self.save_dir = os.path.join(opt.checkpoints_dir, opt.project_name) # save all the checkpoints to save_dir
         if opt.preprocess != 'scale_width':  # with [scale_width], input images might have different sizes, which hurts the performance of cudnn.benchmark.
             torch.backends.cudnn.benchmark = True
         self.loss_names = []
@@ -57,7 +59,7 @@ class BaseModel(ABC):
         return parser
 
     @abstractmethod
-    def set_input(self, input):
+    def set_input(self, input,name):
         """Unpack input data from the dataloader and perform necessary pre-processing steps.
 
         Parameters:
@@ -66,12 +68,12 @@ class BaseModel(ABC):
         pass
 
     @abstractmethod
-    def forward(self):
+    def forward(self,name):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
         pass
 
     @abstractmethod
-    def optimize_parameters(self):
+    def optimize_parameters(self,name):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
         pass
 
@@ -81,8 +83,10 @@ class BaseModel(ABC):
         Parameters:
             opt (Option class) -- stores all the experiment flags; needs to be a subclass of BaseOptions
         """
-        self.task_G_A.setup()
-        self.task_G_B.setup()
+        
+        for name,data in self.all_data.items():
+            data.task_G_A.setup()
+            data.task_G_B.setup()
         for i,section in enumerate(self.generator_sections):
                 print("section",section)
                 
@@ -92,10 +96,14 @@ class BaseModel(ABC):
                 next_steps_classifier_optimizer_B=torch.optim.Adam(section.classifier.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
                 self.optimizers.append(optimizer_A)
                 self.optimizers.append(optimizer_B)
+                
+                for name,data in self.all_data.items():
+                    data.task_G_A.set_optimizer(i, optimizer_A,next_steps_classifier_optimizer_A)
+                    data.task_G_B.set_optimizer(i, optimizer_B,next_steps_classifier_optimizer_B)
                 self.optimizers.append(next_steps_classifier_optimizer_A)
                 self.optimizers.append(next_steps_classifier_optimizer_B)
-                self.task_G_A.set_optimizer(i, optimizer_A,next_steps_classifier_optimizer_A)
-                self.task_G_B.set_optimizer(i, optimizer_B,next_steps_classifier_optimizer_B)
+                # self.task_G_A.set_optimizer(i, optimizer_A,next_steps_classifier_optimizer_A)
+                # self.task_G_B.set_optimizer(i, optimizer_B,next_steps_classifier_optimizer_B)
                 section.to(self.device)
                 section.classifier.to(self.device)
                 #section.feature_adjustment.to(self.device)
@@ -152,17 +160,23 @@ class BaseModel(ABC):
     def get_current_visuals(self):
         """Return visualization images. train.py will display these images with visdom, and save the images to a HTML"""
         visual_ret = OrderedDict()
-        for name in self.visual_names:
-            if isinstance(name, str):
-                visual_ret[name] = getattr(self, name)
+        for name in self.opt.names:
+            data=self.all_data[name]
+            for visual_name in self.visual_names:
+                if isinstance(name, str):
+                    
+                    visual_ret[name+'_'+visual_name] =getattr(data, visual_name)
         return visual_ret
 
     def get_current_losses(self):
         """Return traning losses / errors. train.py will print out these errors on console, and save them to a file"""
         errors_ret = OrderedDict()
-        for name in self.loss_names:
-            if isinstance(name, str):
-                errors_ret[name] = float(getattr(self, 'loss_' + name))  # float(...) works for both scalar tensor and float number
+        for name in self.opt.names:
+            data=self.all_data[name]
+            for loss_name in self.loss_names:
+                if isinstance(name, str):
+                    errors_ret[name+'_'+loss_name] = float(getattr(data, 'loss_' + loss_name))
+       
         return errors_ret
 
     def save_networks(self, epoch):
@@ -171,25 +185,32 @@ class BaseModel(ABC):
         Parameters:
             epoch (int) -- current epoch; used in the file name '%s_net_%s.pth' % (epoch, name)
         """
-        for name in self.model_names:
-            if isinstance(name, str):
-                save_filename = '%s_net_%s.pth' % (epoch, name)
-                save_path = os.path.join(self.save_dir, save_filename)
-                net = getattr(self, 'net' + name)
+        saved_sections=set()
+        for name,data in self.all_data.items():
+            for model_name in self.model_names:
+                if isinstance(name, str):
+                    save_filename = '%s_net_%s.pth' % (epoch, name+"_"+model_name)
+                    print("save_filename",save_filename,self.save_dir)
+                    save_path = os.path.join(self.save_dir, save_filename)
+                    #data=self.all_data[name]
+                    net = getattr(data, 'net' + model_name)
 
-                if len(self.gpu_ids) > 0 and torch.cuda.is_available():
-                    torch.save(net.module.cpu().state_dict(), save_path)
-                    torch.save(net.module.cpu(), save_path+"2")
-                    torch.save(net, save_path +"3")
-                    net.cuda(self.gpu_ids[0])
-                else:
-                    torch.save(net.cpu().state_dict(), save_path)
-                    torch.save(net.cpu(), save_path + "2")
-                    torch.save(net, save_path + "3")
-        for name in self.task_names:
-            saved_sections=set()
-            task=getattr(self, 'task_' + name)
-            task.save_network(self.save_dir,epoch,saved_sections)
+                    if len(self.gpu_ids) > 0 and torch.cuda.is_available():
+                        torch.save(net.module.cpu().state_dict(), save_path)
+                        torch.save(net.module.cpu(), save_path+"2")
+                        torch.save(net, save_path +"3")
+                        net.cuda(self.gpu_ids[0])
+                    else:
+                        torch.save(net.cpu().state_dict(), save_path)
+                        torch.save(net.cpu(), save_path + "2")
+                        torch.save(net, save_path + "3")
+        
+      
+           
+            for task_name in self.task_names:
+                task=getattr(data, 'task_' + task_name)
+                task.save_network(self.save_dir,epoch,saved_sections)
+    
             
 
     def __patch_instance_norm_state_dict(self, state_dict, module, keys, i=0):
@@ -212,28 +233,33 @@ class BaseModel(ABC):
         Parameters:
             epoch (int) -- current epoch; used in the file name '%s_net_%s.pth' % (epoch, name)
         """
-        for name in self.model_names:
-            if isinstance(name, str):
-                load_filename = '%s_net_%s.pth' % (epoch, name)
-                load_path = os.path.join(self.save_dir, load_filename)
-                net = getattr(self, 'net' + name)
-                if isinstance(net, torch.nn.DataParallel):
-                    net = net.module
-                print('loading the model from %s' % load_path)
-                # if you are using PyTorch newer than 0.4 (e.g., built from
-                # GitHub source), you can remove str() on self.device
-                state_dict = torch.load(load_path, map_location=str(self.device))
-                if hasattr(state_dict, '_metadata'):
-                    del state_dict._metadata
+        loaded_sections=set()
+        for name,data in self.all_data.items():
+            
+            for model_name in self.model_names:
+                if isinstance(name, str):
+                    load_filename = '%s_net_%s.pth' % (epoch, name+"_"+model_name)
+                    load_path = os.path.join(self.save_dir, load_filename)
+                    net = getattr(data, 'net' + model_name)
+                    if isinstance(net, torch.nn.DataParallel):
+                        net = net.module
+                    print('loading the model from %s' % load_path)
+                    # if you are using PyTorch newer than 0.4 (e.g., built from
+                    # GitHub source), you can remove str() on self.device
+                    state_dict = torch.load(load_path, map_location=str(self.device))
+                    if hasattr(state_dict, '_metadata'):
+                        del state_dict._metadata
 
-                # patch InstanceNorm checkpoints prior to 0.4
-                for key in list(state_dict.keys()):  # need to copy keys here because we mutate in loop
-                    self.__patch_instance_norm_state_dict(state_dict, net, key.split('.'))
-                net.load_state_dict(state_dict)
-        for name in self.task_names:
-            loaded_sections=set()
-            task=getattr(self, 'task_' + name)
-            task.load_network(self.save_dir,epoch,task.sections,loaded_sections)
+                    # patch InstanceNorm checkpoints prior to 0.4
+                    for key in list(state_dict.keys()):  # need to copy keys here because we mutate in loop
+                        self.__patch_instance_norm_state_dict(state_dict, net, key.split('.'))
+                    net.load_state_dict(state_dict)
+           
+            
+            for task_name in self.task_names:
+                task=getattr(data, 'task_' + task_name)
+                task.load_network(self.save_dir,epoch,task.sections,loaded_sections)
+     
 
     def print_networks(self, verbose):
         """Print the total number of parameters in the network and (if verbose) network architecture
@@ -242,15 +268,17 @@ class BaseModel(ABC):
             verbose (bool) -- if verbose: print the network architecture
         """
         print('---------- Networks initialized -------------')
-        for name in self.model_names:
-            if isinstance(name, str):
-                net = getattr(self, 'net' + name)
-                num_params = 0
-                for param in net.parameters():
-                    num_params += param.numel()
-                if verbose:
-                    print(net)
-                print('[Network %s] Total number of parameters : %.3f M' % (name, num_params / 1e6))
+        for name in self.opt.names:
+            data=self.all_data[name]
+            for name in self.model_names:
+                if isinstance(name, str):
+                    net = getattr(data, 'net' + name)
+                    num_params = 0
+                    for param in net.parameters():
+                        num_params += param.numel()
+                    if verbose:
+                        print(net)
+                    print('[Network %s] Total number of parameters : %.3f M' % (name, num_params / 1e6))
         print('-----------------------------------------------')
 
     def set_requires_grad(self, nets, requires_grad=False):

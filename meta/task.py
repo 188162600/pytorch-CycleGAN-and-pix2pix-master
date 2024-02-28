@@ -4,6 +4,8 @@ import os
 from meta.section import Section
 from meta.next_steps import NextSteps
 # from torchviz import make_dot
+
+
 class Task:
     def __init__(self,input_shape,device,sections:list) -> None:
        
@@ -109,8 +111,9 @@ class Task:
                 #print("features",section.features[0].shape)
                 last_features_shape=section.features[0].shape
                 last_features=section.features[0].unsqueeze(0)
+                #print("last_features",last_features.shape)
             else:
-                last_features=data
+                last_features=data[0].unsqueeze(0)
             last_section_steps=section.next_steps
 
             self.results.append(data)
