@@ -104,8 +104,9 @@ class BoundaryAwareBatchSampler:
     def __iter__(self):
         if self.shuffle:
             random.shuffle(self.batches)  # Shuffle the batches
-        for batch in self.batches:
-            yield batch
+        yield from self.batches
+        # for batch in self.batches:
+        #     yield batch
 
     def __len__(self):
         return len(self.batches)
