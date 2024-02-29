@@ -97,6 +97,7 @@ class BaseModel(ABC):
                 self.optimizers.append(optimizer_A)
                 self.optimizers.append(optimizer_B)
                 
+                
                 for name,data in self.all_data.items():
                     data.task_G_A.set_optimizer(i, optimizer_A,next_steps_classifier_optimizer_A)
                     data.task_G_B.set_optimizer(i, optimizer_B,next_steps_classifier_optimizer_B)
@@ -118,6 +119,39 @@ class BaseModel(ABC):
             load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
             self.load_networks(load_suffix)
         self.print_networks(opt.verbose)
+        
+        # self.task_G_A.setup()
+        # self.task_G_B.setup()
+        # for i,section in enumerate(self.generator_sections):
+        #         print("section",section)
+                
+        #         optimizer_A=torch.optim.Adam(section.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
+        #         next_steps_classifier_optimizer_A=torch.optim.Adam(section.classifier.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
+        #         optimizer_B=torch.optim.Adam(section.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
+        #         next_steps_classifier_optimizer_B=torch.optim.Adam(section.classifier.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
+        #         self.optimizers.append(optimizer_A)
+        #         self.optimizers.append(optimizer_B)
+        #         self.optimizers.append(next_steps_classifier_optimizer_A)
+        #         self.optimizers.append(next_steps_classifier_optimizer_B)
+        #         self.task_G_A.set_optimizer(i, optimizer_A,next_steps_classifier_optimizer_A)
+        #         self.task_G_B.set_optimizer(i, optimizer_B,next_steps_classifier_optimizer_B)
+        #         section.to(self.device)
+        #         section.classifier.to(self.device)
+        #         #section.feature_adjustment.to(self.device)
+        #         section.classifier.encoder.to(self.device)
+        #         section.classifier.encoder.to(self.device)
+        #         for layers in section.layers:
+        #             for layer in layers:
+        #                 layer.to(self.device)
+        if self.isTrain:
+            self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
+        if not self.isTrain or opt.continue_train:
+            load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
+            self.load_networks(load_suffix)
+        self.print_networks(opt.verbose)
+        
+
+        
         
 
     def eval(self):
@@ -162,6 +196,8 @@ class BaseModel(ABC):
         visual_ret = OrderedDict()
         for name in self.opt.names:
             data=self.all_data[name]
+            # if data.empty:
+            #     continue
             for visual_name in self.visual_names:
                 if isinstance(name, str):
                     
@@ -173,6 +209,8 @@ class BaseModel(ABC):
         errors_ret = OrderedDict()
         for name in self.opt.names:
             data=self.all_data[name]
+            # if data.empty:
+            #     continue
             for loss_name in self.loss_names:
                 if isinstance(name, str):
                     errors_ret[name+'_'+loss_name] = float(getattr(data, 'loss_' + loss_name))

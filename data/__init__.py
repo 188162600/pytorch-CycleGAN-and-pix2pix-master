@@ -81,35 +81,45 @@ class ChainedDataset(torch.utils.data.Dataset):
         return self.len
 
 import random
-
+torch.utils.data.Sampler
 class BoundaryAwareBatchSampler:
     def __init__(self, datasets, batch_size, shuffle):
         self.datasets = datasets
         self.batch_size = batch_size
         self.shuffle = shuffle
+        # Initialize starting indices here if needed, or pass dynamically when calling _generate_batches
+
         self.batches = self._generate_batches()
+        self.total_items = sum(len(batch) for batch in self.batches)
 
     def _generate_batches(self):
         batches = []
+        start_index = 0
         for dataset in self.datasets:
-            dataset_indices = list(range(len(dataset)))
-            # Ensure the last batch is not smaller than the batch size
+
+            # Adjust the range to start from the given starting index, ensuring it does not exceed dataset length
+            #start_index = max(0, min(start_index, len(dataset)))
+            dataset_indices = list(range(start_index,start_index+ len(dataset)))
             if len(dataset_indices) % self.batch_size != 0:
+                # Adjust dataset indices to ensure the last batch meets the batch size requirement
                 dataset_indices = dataset_indices[:-(len(dataset_indices) % self.batch_size)]
-            # Split dataset indices into batches
-            dataset_batches = [dataset_indices[i:i + self.batch_size] for i in range(0, len(dataset_indices), self.batch_size)]
+            #print(dataset_indices)
+            dataset_batches = [dataset_indices[i:i + self.batch_size] for i in
+                               range(0, len(dataset_indices), self.batch_size)]
             batches.extend(dataset_batches)
+            start_index+=len(dataset)
+            #print(start_index)
         return batches
 
     def __iter__(self):
         if self.shuffle:
             random.shuffle(self.batches)  # Shuffle the batches
         yield from self.batches
-        # for batch in self.batches:
-        #     yield batch
 
     def __len__(self):
-        return len(self.batches)
+        # Return the total number of items across all batches
+        return self.total_items
+
 
 class CustomDatasetDataLoader():
     """Wrapper class of Dataset class that performs multi-threaded data loading"""

@@ -9,8 +9,26 @@ import meta.network
 
 class CycleGANModel(BaseModel):
     class Data:
-        def __init__(self) -> None:
-            pass
+        def __init__(self,dummy) -> None:
+            #self.empty=True
+            self.real_A=dummy
+            self.real_B=dummy
+            self.fake_A=dummy
+            self.fake_B=dummy
+            self.rec_A=dummy
+            self.rec_B=dummy
+            self.idt_A=dummy
+            self.idt_B=dummy
+            self.loss_D_A=0
+            self.loss_G_A=0
+            self.loss_cycle_A=0
+            self.loss_idt_A=0
+            self.loss_D_B=0
+            self.loss_G_B=0
+            self.loss_cycle_B=0
+            self.loss_idt_B=0
+            
+            
     """
     This class implements the CycleGAN model, for learning image-to-image translation without paired data.
 
@@ -55,6 +73,8 @@ class CycleGANModel(BaseModel):
         Parameters:
             opt (Option class)-- stores all the experiment flags; needs to be a subclass of BaseOptions
         """
+        
+        
         BaseModel.__init__(self, opt)
         # specify the training losses you want to print out. The training/test scripts will call <BaseModel.get_current_losses>
         self.loss_names = ['D_A', 'G_A', 'cycle_A', 'idt_A', 'D_B', 'G_B', 'cycle_B', 'idt_B']
@@ -94,8 +114,9 @@ class CycleGANModel(BaseModel):
             dummy_task.append_section(section)
         
         self.all_data=dict()
+        dummy=torch.zeros(1,*shape)
         for name in opt.names:
-            data=self.Data()
+            data=self.Data(dummy)
             self.all_data.update({name:data})
             data.task_G_A=meta.task.Task(shape,self.device,[])
             data.task_G_B=meta.task.Task(shape,self.device,[])
@@ -171,6 +192,7 @@ class CycleGANModel(BaseModel):
         # self.steps_rec_B=self.task_G_A.previous_steps
         #print("self.real_A",self.real_A.device)
         data=self.current_data
+        data.empty=False
         data.fake_B=data.task_G_A.forward2(data.real_A)
         #self.fake_B_each_section=self.task_G_A.get_results()
         data.fake_B_steps=data.task_G_A.previous_steps
