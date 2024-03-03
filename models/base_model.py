@@ -92,10 +92,13 @@ class BaseModel(ABC):
                 
                 optimizer_A=torch.optim.Adam(section.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
                 next_steps_classifier_optimizer_A=torch.optim.Adam(section.classifier.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
-                optimizer_B=torch.optim.Adam(section.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
-                next_steps_classifier_optimizer_B=torch.optim.Adam(section.classifier.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
+                # optimizer_B=torch.optim.Adam(section.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
+                # next_steps_classifier_optimizer_B=torch.optim.Adam(section.classifier.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
+                optimizer_B=optimizer_A
+                next_steps_classifier_optimizer_B=next_steps_classifier_optimizer_A
                 self.optimizers.append(optimizer_A)
-                self.optimizers.append(optimizer_B)
+                #self.optimizers.append(optimizer_B)
+                self.optimizers.append(next_steps_classifier_optimizer_A)
                 
                 
                 for name,data in self.all_data.items():
@@ -111,8 +114,11 @@ class BaseModel(ABC):
                 section.classifier.encoder.to(self.device)
                 section.classifier.encoder.to(self.device)
                 for layers in section.layers:
-                    for layer in layers:
-                        layer.to(self.device)
+                    if isinstance(layers, list):
+                        for layer in layers:
+                            layer.to(self.device)
+                    else:
+                        layers.to(self.device)
         if self.isTrain:
             self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
         if not self.isTrain or opt.continue_train:

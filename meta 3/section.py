@@ -17,7 +17,7 @@ class Section(nn.Module):
         self.num_total_layers=None
         self.layers=[]
         self.base_layers=[]
-        #self.classifier=None
+        self.classifier=None
         self.output_channels=[]
 
         self.num_options_each_layer=[]
@@ -158,9 +158,10 @@ class Section(nn.Module):
     def forward(self,data:torch.Tensor,features:torch.Tensor,previous_steps:NextSteps,task):
        
         assert self.is_setup
-      
-        next_steps=self.classifier.forward(features,previous_steps,task)
-        next_steps.tensor=next_steps.tensor
+        # if previous_steps is not None:
+        #     previous_steps.tensor=previous_steps.tensor.clone()
+        next_steps=self.classifier.forward(features.clone(),previous_steps,task)
+        
         self.next_steps=next_steps
         
         layer_with_params_index=0
@@ -186,8 +187,8 @@ class Section(nn.Module):
            
            
             if i==self.last_feature_index:
-                self.features=data.clone().detach()
-           # data=data.clone()
+                self.features=data.detach()
+                
             #self.last_feature_index+=1
         return data
     def dummy_forward(self,data):
@@ -219,33 +220,22 @@ class Section(nn.Module):
            
            
             if self.is_encoder(self.base_layers[i]):
-                self.features=data.clone().detach()
+                self.features=data.detach()
                 
                 self.last_feature_index=i
         return data
         
-
-    def get_steps_classifier_loss(self,loss,next_steps:NextSteps):
+    @staticmethod
+    def get_steps_classifier_loss(loss,next_steps:NextSteps):
         #for i in  next_steps.probablity:
             #print("i",i.shape)
-        confidence=0
-        for probability in next_steps.probability:
-            #print(probability,"prob")
-            #print(torch.mean(probability).shape,"torch.mean(probability).shape")
-            confidence=torch.sum(probability)+confidence
-        
-        #confidence=torch.sum(torch.cat(next_steps.probability,dim=0))
-        #print("confience",confidence)
-        # confidence=0
-        #
-        # for probability in next_steps.probability:
-        #     #print(probability,"prob")
-        #     #print(torch.mean(probability).shape,"torch.mean(probability).shape")
-        #     confidence=torch.mean(probability)+confidence
-        confidence=probability[0]
-        #confidence=torch.sum(next_steps.tensor)
-        confidence=next_steps.tensor[0][0][0]
-        #print(confidence.shape,"confidence.shape",confidence)
+        #print("get_steps_classifier_loss")
+        if next_steps.confidence is None:
+            confidence=torch.sum(torch.cat(next_steps.probability))
+            next_steps.confidence=confidence
+        else:
+            confidence=next_steps.confidence
+       
         return confidence*(loss.detach())
 
             

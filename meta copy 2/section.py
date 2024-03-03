@@ -5,11 +5,11 @@ import torch.nn as nn
 import copy
 from meta.next_steps import NextSteps
 from meta.next_steps import NextStepClassifier
-from meta.conv2d import Conv2d
+
 
 
 class Section(nn.Module):
-    def __init__(self,name,num_options_each_layer,num_pick,is_encoder=lambda x:isinstance(x,(nn.Conv2d,Conv2d))) -> None:
+    def __init__(self,name,num_options_each_layer,num_pick,is_encoder=lambda x:isinstance(x,nn.Conv2d)) -> None:
         super().__init__()
         self.base_layers=[]
         # self.num_shared_layers=[]
@@ -56,14 +56,12 @@ class Section(nn.Module):
     # def load_network(self,path):
     #     self.load_state_dict(torch.load(path))
         
-    def append_layer(self,layer):
+    def append_layer(self,layer,use_channels):
         self.base_layers.append(layer)
-        
-        self.use_channels.append(False)
-    def append_channelled_layer(self,layer):
-        self.base_layers.append(layer)
-      
-        self.use_channels.append(True)
+        # self.num_shared_layers.append(0)
+        # self.shared_index.append(None)
+        self.use_channels.append(use_channels)
+    
     # def append_shared_layers(self,index,num_shared_layers):
     #     self.base_layers.append(self.base_layers[index])
     #     self.num_shared_layers.append(num_shared_layers)
@@ -78,10 +76,9 @@ class Section(nn.Module):
     def set_step_classifier_encoder(self,encoder):
         self.step_classifier_encoder=encoder
     def setup(self):
-        
+        self.is_layer_with_params=[]
         if self.is_setup:
             return
-        self.is_layer_with_params=[]
         self.layers=[]
         self.last_feature_index=None
         self.num_layers_with_params=0
@@ -130,7 +127,6 @@ class Section(nn.Module):
         self.classifier=NextStepClassifier(self.input_features_shape,self.num_total_layers,self.num_options_each_layer,self.num_pick,self.step_classifier_encoder)
         #self.add_module ("next_steps_classifier",self.classifier)
         self.is_setup=True
-    
     def dummy_forward(self,data):
         #print(self.base_layers)
         #print("data",data.shape)
@@ -165,7 +161,6 @@ class Section(nn.Module):
         self.next_steps=next_steps
       
         layer_with_params_index=0
-        #print("len",len(self.is_layer_with_params),self.num_total_layers)
         for i in range(self.num_total_layers):
             
             if self.is_layer_with_params[i]:

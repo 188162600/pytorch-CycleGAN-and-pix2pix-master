@@ -145,7 +145,7 @@ import torch.nn as nn
 #         return indices
 
 class NextSteps:
-    def __init__(self, tensor: torch.Tensor,hx, num_picking_classes):
+    def __init__(self, tensor: torch.Tensor, num_picking_classes):
         self.tensor = tensor
         batch = tensor.size(0)
         #print(num_picking_classes,"num_picking_classes")
@@ -160,8 +160,6 @@ class NextSteps:
         self.softmax = torch.softmax(self.tensor, dim=1)
        
         self.probability = torch.gather(self.softmax, 1,self. indices)
-        self.confidence=torch.sum(self.probability)
-        self.hx=hx
         #print(self.indices)
         #print("num_picking_classes",num_picking_classes,self.probability.shape,self.indices.shape,self.softmax.shape)
         #print("self.probability.shape", self.probability.shape)
@@ -182,7 +180,7 @@ class NextStepClassifier(nn.Module):
         
         
         self.nets = nn.ModuleList(
-            [nn.LSTMCell(input_size= self.in_features_size, hidden_size=num_step_classes ) for _ in
+            [nn.LSTMCell(input_size= self.in_features_size, hidden_size=num_step_classes * num_next_steps) for _ in
              range(num_next_steps)])
         self.num_next_steps = num_next_steps
         self.num_step_classes = num_step_classes
@@ -207,30 +205,42 @@ class NextStepClassifier(nn.Module):
         
         #print("feature shape after",features.shape)
         hidden_long_term = task.hidden_long_term[self] if task.hidden_long_term.get(self) is not None else torch.zeros(
-            batch, self.num_step_classes , device=features.device)
+            batch, self.num_step_classes * self.num_next_steps, device=features.device)
 
         if previous is None:
-            hx = torch.zeros(batch, self.num_step_classes ,
+            hidden_short_term = torch.zeros(batch, self.num_step_classes , self.num_next_steps,
                                             device=features.device)
         else:
-            hx = previous.hx.clone().detach()
+            hidden_short_term = previous.tensor
      
-     
+        hx = hidden_short_term
+      
+        if hx.size(1)!=self.num_step_classes or hx.size(2)!= self.num_next_steps:
+            #print("self.num_step_classes",self.num_step_classes)
+            #hx=hx.view(batch,self.num_step_classes,-1)
+            #print(hx.shape,(batch,self.num_step_classes,))
+            #print("interpolating",hx.shape)
+            #print("hx.shape,(self.num_step_classes,self.num_next_steps ,)",hx.shape,(self.num_step_classes,self.num_next_steps ,))
+            hx=hx.unsqueeze(0)
+            #print("hx.shape,(self.num_step_classes,self.num_next_steps ,)",hx.shape,(self.num_step_classes,self.num_next_steps ,))
+            hx=torch.nn.functional.interpolate(hx,(self.num_step_classes,self.num_next_steps ,))
+            #print("interpolated",hx.shape)
+        hx=hx.view(batch,-1)
+        #
+        # previous_steps=hx.size(1)
+        # hx=hx[:,:,:]
         cx = hidden_long_term
-       
-        result=[]
-        
+        #print("hx cx",hx,cx,features)
+        #print("hidden", batch, self.num_step_classes, self.num_next_steps, self.num_previous_steps)
         for net in self.nets:
             #print("forward2", net, features.shape, hx.shape, cx.shape)
             #print("forward2",features.shape,hx.shape,cx.shape)
-            hx, cx = net(features, (hx, cx))
-            result.append(hx)
+            hx, cx = net(features.clone().detach(), (hx.clone().detach(), cx))
             #print("forward2 result", net, features.shape, hx.shape, cx.shape)
-        result=torch.cat(result,dim=1)
-        result=result.view(batch, self.num_step_classes, self.num_next_steps)
+        hx=hx.view(batch, self.num_step_classes, self.num_next_steps)
         task.hidden_long_term[self] = cx.detach()
-        #print("result",result.shape)
-        return NextSteps(result, hx,self.num_picking_classes)
+
+        return NextSteps(hx, self.num_picking_classes)
 
 # class NextStepClassifier(nn.Module):
 #     def __init__(self, in_features_shape, num_next_steps, num_step_classes,num_picking_classes,encoder):

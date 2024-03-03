@@ -25,18 +25,11 @@ class BaseOptions():
         parser.add_argument('--names', type=str, action='append', default=[], required=True,help='name of the experiment. It decides where to store samples and models')
         parser.add_argument('--gpu_ids', type=str, default='0', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
         parser.add_argument('--checkpoints_dir', type=str, default='./checkpoints', help='models are saved here')
-        
-        parser.add_argument('--num_options_downsample', type=int, default=4)
-        parser.add_argument('--num_shared_downsample', type=int, default=0)
-        parser.add_argument('--downsample_step_classifier_encoder', type=str, default="resnet50")
-        
-        parser.add_argument('--num_options_upsample', type=int, default=4)
-        parser.add_argument('--num_shared_upsample', type=int, default=0)
-        parser.add_argument('--upsample_step_classifier_encoder', type=str, default="resnet50")
-       
-        parser.add_argument('--num_options_blocks', type=int, default=12)
-        parser.add_argument('--num_shared_blocks', type=int, default=8)
-        parser.add_argument('--blocks_step_classifier_encoder', type=str, default="resnet50")
+        parser.add_argument('--num_options', type=int, default=4, help='# of options in each layer')
+        parser.add_argument('--num_pick',type=int,default=2,help='factor to multiply the number of channels in each option')
+        parser.add_argument('--downsample_step_classifier_encoder',type=str,default="resnet50")
+        parser.add_argument('--upsample_step_classifier_encoder',type=str,default="resnet50")
+        parser.add_argument('--blocks_step_classifier_encoder',type=str,default="resnet50")
         
         # model parameters
         parser.add_argument('--model', type=str, default='cycle_gan', help='chooses which model to use. [cycle_gan | pix2pix | test | colorization]')
@@ -163,7 +156,7 @@ class BaseOptions():
         #     opt.names=[opt.names]
         # if isinstance(opt.dataroot,str):
         #     opt.dataroot=[opt.dataroot]
-        print(torch.cuda.get_device_name(id))
+            print(torch.cuda.get_device_name(id))
 
         self.opt = opt
         return self.opt
