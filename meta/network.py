@@ -42,8 +42,29 @@ def init_weights(net, init_type='normal', init_gain=0.02):
     """
     def init_func(m):  # define the initialization function
         classname = m.__class__.__name__
-        if hasattr(m, 'weight') and (classname.find('Conv') != -1 or classname.find('Linear') != -1):
-            if init_type == 'normal':
+        #print(classname,"classname",classname.find('Conv'),classname.find('Conv2d'))
+        # if hasattr(m, 'weight') and (classname.find('Conv') != -1 or classname.find('Linear') != -1):
+            
+        #     if init_type == 'normal':
+        #         init.normal_(m.weight.data, 0.0, init_gain)
+        #     elif init_type == 'xavier':
+        #         init.xavier_normal_(m.weight.data, gain=init_gain)
+        #     elif init_type == 'kaiming':
+        #         init.kaiming_normal_(m.weight.data, a=0, mode='fan_in')
+        #     elif init_type == 'orthogonal':
+        #         init.orthogonal_(m.weight.data, gain=init_gain)
+        #     else:
+        #         raise NotImplementedError('initialization method [%s] is not implemented' % init_type)
+        #     if hasattr(m, 'bias') and m.bias is not None:
+        #         init.constant_(m.bias.data, 0.0)
+        # elif classname.find('BatchNorm2d') != -1:  # BatchNorm Layer's weight is not a matrix; only normal distribution applies.
+        #     init.normal_(m.weight.data, 1.0, init_gain)
+        #     init.constant_(m.bias.data, 0.0)
+        #print(classname)
+       
+        if hasattr(m, 'weight')  and (classname.find('Conv') != -1 or classname.find('Linear') != -1):
+            
+            if init_type == 'normal' :
                 init.normal_(m.weight.data, 0.0, init_gain)
             elif init_type == 'xavier':
                 init.xavier_normal_(m.weight.data, gain=init_gain)
@@ -72,11 +93,11 @@ def init_net(net, init_type='normal', init_gain=0.02, gpu_ids=[]):
 
     Return an initialized network.
     """
-    if len(gpu_ids) > 0:
-        print("gpu_ids",gpu_ids)
-        assert(torch.cuda.is_available())
-        net.to(gpu_ids[0])
-        net = torch.nn.DataParallel(net, gpu_ids)  # multi-GPUs
+    # if len(gpu_ids) > 0:
+    #     print("gpu_ids",gpu_ids)
+    #     assert(torch.cuda.is_available())
+    #     net.to(gpu_ids[0])
+    #     net = torch.nn.DataParallel(net, gpu_ids)  # multi-GPUs
     init_weights(net, init_type, init_gain=init_gain)
     return net
 def define_resnet_section(num_options,num_pick,input_nc, output_nc, ngf, norm, use_dropout=False, n_blocks=6, padding_type='reflect', init_type='normal', init_gain=0.02, gpu_ids=[]):
@@ -85,9 +106,20 @@ def define_resnet_section(num_options,num_pick,input_nc, output_nc, ngf, norm, u
     upsample= Section("upsample",num_options,num_pick)
     norm=get_norm_layer(norm)
     build_resnet_generator_section(num_options,num_pick,input_nc, output_nc, ngf, norm, use_dropout, n_blocks, padding_type,downsamples= downsample,blocks= blocks,upsamples=upsample)
-    init_net(downsample, init_type, init_gain, gpu_ids)
-    init_net(blocks, init_type, init_gain, gpu_ids)
-    init_net(upsample, init_type, init_gain, gpu_ids)
+    #for child in downsample.children():
+    for layers in downsample.base_layers:
+        
+        init_net(layers, init_type, init_gain, gpu_ids)
+    for layers in blocks.base_layers:
+        
+        init_net(layers, init_type, init_gain, gpu_ids)
+    for layers in upsample.base_layers:
+        
+        init_net(layers, init_type, init_gain, gpu_ids)   
+   
+    # init_net(downsample, init_type, init_gain, gpu_ids)
+    # init_net(blocks, init_type, init_gain, gpu_ids)
+    # init_net(upsample, init_type, init_gain, gpu_ids)
     # for section in [downsample,blocks,upsample]:
     #     print(section.name)
     #     for i,layer in enumerate( section.base_layers):

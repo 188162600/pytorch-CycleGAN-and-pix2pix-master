@@ -47,9 +47,9 @@ class Section(nn.Module):
         for i,layer in enumerate(self.layers):
             if isinstance(layer,list):
                 for j,l in enumerate(layer):
-                    self.register_module(f"layer_{i}_{j}",l)
+                    self.add_module(f"layer_{i}_{j}",l)
             else:
-                self.register_module(f"layer_{i}",layer)
+                self.add_module(f"layer_{i}",layer)
            
                 
                 
@@ -96,14 +96,14 @@ class Section(nn.Module):
                     #print("append1",layer)
                     layer=copy.deepcopy(layer)
                     self.layers.append(layer)
-                    self.register_module(f"layer_{i}",layer)
+                    self.add_module(f"layer_{i}",layer)
                 else:
                    
                     layers=[]
                     for j in range(self.num_options_each_layer):
                         layer=copy.deepcopy(layer)
                         layers.append(layer)
-                        self.register_module(f"layer_{i}_{j}",layer)
+                        self.add_module(f"layer_{i}_{j}",layer)
                     self.layers.append(layers)
                     #print("append2",layer)
                 self.num_layers_with_params+=1
@@ -112,7 +112,7 @@ class Section(nn.Module):
                 self.is_layer_with_params.append(False)
                 layer=copy.deepcopy(layer)
                 self.layers.append(layer)
-                self.register_module(f"layer_{i}",layer)
+                self.add_module(f"layer_{i}",layer)
                 #print("append3",layer)
                 
             
