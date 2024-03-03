@@ -24,7 +24,7 @@ class Conv2d(nn.Module):
         self.out_group_options=out_group_options
         #self.input=torch.zeros(1,in_channels,*kernel_size)
     def forward(self, x,out_channel_groups):
-        #print("out_channels",out_channels)
+        #print("out_channels",out_channel_groups)
         bias= self.bias[out_channel_groups].view(-1)
         weight=self.weight[out_channel_groups].view(-1,self.in_channels,*self.kernel_size)
         return nn.functional.conv2d(x, weight, bias, stride=self.stride,padding= self.padding,dilation= self.dilation,groups= self.groups)
@@ -57,11 +57,11 @@ class ConvTranspose2d(nn.Module):
     def __repr__(self):
         return super().__repr__() +f"in_channels={self.in_channels},out_channels_groups={self.out_channel_group},out_group_options={self.out_group_options},bias={self.bias.shape},weight={self.weight.shape},kernel_size={self.kernel_size},stride={self.stride},padding={self.padding},dilation={self.dilation},groups={self.groups},padding_mode={self.padding_mode}"
     def forward(self, x,out_channels):
-        #print(out_channels,self.bias.shape)
+        #print(out_channels)
         bias=self.bias[out_channels].view(-1)
         weight=self.weight[:,out_channels].view(self.in_channels,-1,*self.kernel_size)
         return nn.functional.conv_transpose2d(x, weight, bias,stride= self.stride,padding= self.padding,output_padding=self.output_padding,dilation= self.dilation,groups= self.groups)
-conv=Conv2d(3,4,4,7)
-convtrans=ConvTranspose2d(8, 4,4,7)
-dummy_input=torch.zeros(1,3,32,32)
-print(convtrans(conv(dummy_input,torch.tensor((0,1))),torch.tensor((0,1))).shape)
+# conv=Conv2d(3,4,4,7)
+# convtrans=ConvTranspose2d(8, 4,4,7)
+# dummy_input=torch.zeros(1,3,32,32)
+# print(convtrans(conv(dummy_input,torch.tensor((0,1))),torch.tensor((0,1))).shape)

@@ -84,10 +84,11 @@ def define_resnet_section(num_options,num_pick,input_nc, output_nc, ngf, norm, u
     blocks= Section("resnet_blocks",num_options,num_pick)
     upsample= Section("upsample",num_options,num_pick)
     norm=get_norm_layer(norm)
+    
     build_resnet_generator_section(num_options,num_pick,input_nc, output_nc, ngf, norm, use_dropout, n_blocks, padding_type,downsamples= downsample,blocks= blocks,upsamples=upsample)
     init_net(downsample, init_type, init_gain, gpu_ids)
     init_net(blocks, init_type, init_gain, gpu_ids)
-    init_net(upsample, init_type, init_gain, gpu_ids)
+    # init_net(upsample, init_type, init_gain, gpu_ids)
     # for section in [downsample,blocks,upsample]:
     #     print(section.name)
     #     for i,layer in enumerate( section.base_layers):

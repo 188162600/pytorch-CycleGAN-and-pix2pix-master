@@ -11,6 +11,7 @@ class CycleGANModel(BaseModel):
     class Data:
         def __init__(self,dummy) -> None:
             #self.empty=True
+            self.dummy=dummy
             self.real_A=dummy
             self.real_B=dummy
             self.fake_A=dummy
@@ -27,6 +28,7 @@ class CycleGANModel(BaseModel):
             self.loss_G_B=0
             self.loss_cycle_B=0
             self.loss_idt_B=0
+            
             
             
     """
@@ -195,7 +197,7 @@ class CycleGANModel(BaseModel):
         data.fake_B=data.task_G_A.forward(data.real_A)
         #self.fake_B_each_section=self.task_G_A.get_results()
         data.fake_B_steps=data.task_G_A.previous_steps
-        
+        #print(data.fake_B)
         data.rec_A=data.task_G_B.forward(data.fake_B)
         #self.rec_A_each_section=self.task_G_B.get_results()
         data.rec_A_steps=data.task_G_B.previous_steps

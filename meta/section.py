@@ -29,7 +29,7 @@ class Section(nn.Module):
         self.features=None
   
     def save_network(self,path):
-        print(vars(self))
+        #print(vars(self))
         data=copy.copy(vars(self))
         #print("is_encoder",self.is_encoder)
         del data["is_encoder"]
@@ -39,7 +39,7 @@ class Section(nn.Module):
     def load_network(self,path):
         states=torch.load(path)
         for key,value in states.items():
-            print(key)
+            #print(key)
             setattr(self,key,value)
        
         self.register_module("classifier",self.classifier)
@@ -142,8 +142,8 @@ class Section(nn.Module):
                 if self.use_channels[i]:
                     index=torch.zeros(self.num_pick,dtype=torch.long)
                     
-                    print("index",index.shape)  
-                    print("layer",layer)
+                    #print("index",index.shape)  
+                    #print("layer",layer)
                     data=layer(data,index)
                 else:
                     data=layer(data)
@@ -151,7 +151,7 @@ class Section(nn.Module):
                     self.features=data.clone().detach()
                     print("self.features.shape",self.features.shape)
         # print("features",self.features.shape)
-            print("data",data.shape)
+            #print("data",data.shape)
             
         return data
         

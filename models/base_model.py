@@ -88,7 +88,7 @@ class BaseModel(ABC):
             data.task_G_A.setup()
             data.task_G_B.setup()
         for i,section in enumerate(self.generator_sections):
-                print("section",section)
+                #print("section",section)
                 
                 optimizer_A=torch.optim.Adam(section.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
                 next_steps_classifier_optimizer_A=torch.optim.Adam(section.classifier.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
@@ -200,14 +200,18 @@ class BaseModel(ABC):
     def get_current_visuals(self):
         """Return visualization images. train.py will display these images with visdom, and save the images to a HTML"""
         visual_ret = OrderedDict()
+        # print("self.opt.names",self.opt.names)
+        # print("self.visual_names",self.visual_names)
         for name in self.opt.names:
             data=self.all_data[name]
             # if data.empty:
             #     continue
             for visual_name in self.visual_names:
                 if isinstance(name, str):
-                    
+                    #print(torch.equal(getattr(data, '' + visual_name),data.dummy.to(getattr(data, '' + visual_name).device)),visual_name)
                     visual_ret[name+'_'+visual_name] =getattr(data, visual_name)
+                    #print(getattr(data, visual_name).shape,visual_name)
+                    
         return visual_ret
 
     def get_current_losses(self):
@@ -220,6 +224,7 @@ class BaseModel(ABC):
             for loss_name in self.loss_names:
                 if isinstance(name, str):
                     errors_ret[name+'_'+loss_name] = float(getattr(data, 'loss_' + loss_name))
+                  
        
         return errors_ret
 

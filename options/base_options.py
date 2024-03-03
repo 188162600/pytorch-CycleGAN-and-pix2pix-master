@@ -140,6 +140,7 @@ class BaseOptions():
         if opt.suffix:
             suffix = ('_' + opt.suffix.format(**vars(opt))) if opt.suffix != '' else ''
             opt.name = opt.name + suffix
+        assert opt.num_options>opt.num_pick
 
         self.print_options(opt)
 
