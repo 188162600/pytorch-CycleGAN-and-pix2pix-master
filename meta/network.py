@@ -61,8 +61,23 @@ def init_weights(net, init_type='normal', init_gain=0.02):
         #     init.normal_(m.weight.data, 1.0, init_gain)
         #     init.constant_(m.bias.data, 0.0)
         #print(classname)
-       
-        if hasattr(m, 'weight')  and (classname.find('Conv') != -1 or classname.find('Linear') != -1):
+        if isinstance(m, (Conv2d,ConvTranspose2d)):
+            #print(m.weight.shape,m.bias.shape)
+            if init_type == 'normal':
+                m.init_weight(lambda x: init.normal_(x, 0.0, init_gain))
+               
+            elif init_type == 'xavier':
+                m.init_weight(lambda x: init.xavier_normal_(x, gain=init_gain))
+                
+            elif init_type == 'kaiming':
+                m.init_weight(lambda x: init.kaiming_normal_(x, a=0, mode='fan_in'))
+            elif init_type == 'orthogonal':
+                m.init_weight(lambda x: init.orthogonal_(x, gain=init_gain))
+            else:
+                raise NotImplementedError('initialization method [%s] is not implemented' % init_type)
+            if hasattr(m, 'bias') and m.bias is not None:
+                init.constant_(m.bias, 0.0)
+        elif hasattr(m, 'weight')  and (classname.find('Conv') != -1 or classname.find('Linear') != -1):
             
             if init_type == 'normal' :
                 init.normal_(m.weight.data, 0.0, init_gain)
@@ -76,6 +91,7 @@ def init_weights(net, init_type='normal', init_gain=0.02):
                 raise NotImplementedError('initialization method [%s] is not implemented' % init_type)
             if hasattr(m, 'bias') and m.bias is not None:
                 init.constant_(m.bias.data, 0.0)
+    
         elif classname.find('BatchNorm2d') != -1:  # BatchNorm Layer's weight is not a matrix; only normal distribution applies.
             init.normal_(m.weight.data, 1.0, init_gain)
             init.constant_(m.bias.data, 0.0)

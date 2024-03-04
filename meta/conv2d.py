@@ -23,6 +23,14 @@ class Conv2d(nn.Module):
         self.out_channel_group=out_channel_group
         self.out_group_options=out_group_options
         #self.input=torch.zeros(1,in_channels,*kernel_size)
+    def init_bias(self,func):
+        func(self.bias.view(-1))
+    def init_weight(self,func):
+        for i in range(self.out_group_options):
+            for j in range(self.out_channel_group):
+                for k in range(self.in_channels):
+                    func(self.weight[i,j,k].view(-1))
+        #func(self.weight.view(-1,self.in_channels,*self.kernel_size))
     def forward(self, x,out_channel_groups):
         #print("out_channels",out_channel_groups)
         bias= self.bias[out_channel_groups].view(-1)
@@ -54,6 +62,15 @@ class ConvTranspose2d(nn.Module):
         
         self.out_channel_group=out_channel_group
         self.out_group_options=out_group_options
+    def init_bias(self,func):
+        func(self.bias.view(-1))
+    def init_weight(self,func):
+        for i in range(self.in_channels):
+            for j in range(self.out_group_options):
+                for k in range(self.out_channel_group):
+                    func(self.weight[i,j,k].view(-1))
+        #func(self.weight.view(-1,self.in_channels,*self.kernel_size))
+        
     def __repr__(self):
         return super().__repr__() +f"in_channels={self.in_channels},out_channels_groups={self.out_channel_group},out_group_options={self.out_group_options},bias={self.bias.shape},weight={self.weight.shape},kernel_size={self.kernel_size},stride={self.stride},padding={self.padding},dilation={self.dilation},groups={self.groups},padding_mode={self.padding_mode}"
     def forward(self, x,out_channels):
