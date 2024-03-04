@@ -136,22 +136,24 @@ class CustomDatasetDataLoader():
         
         dataset_class = find_dataset_using_name(opt.dataset_mode)
         #print("datasetclass",dataset_class)
-        datasets=[]
+        self.datasets=[]
         #print("opt.names",opt.names,opt.dataroot)
         for name,dataroot in zip( opt.names,opt.dataroot):
             
             dataset = dataset_class(opt,dataroot,name)
             print("dataset [%s] was created" % type(dataset).__name__)
-            datasets.append(dataset)
-        self.dataset=ChainedDataset(datasets)
+            self.datasets.append(dataset)
+        self.dataset=ChainedDataset(self.datasets)
 
-        batch_sampler = BoundaryAwareBatchSampler(datasets, batch_size=opt.batch_size,shuffle=not opt.serial_batches)
+        batch_sampler = BoundaryAwareBatchSampler(self.datasets, batch_size=opt.batch_size,shuffle=not opt.serial_batches)
         #print(self.dataset,"dataset")
         self.dataloader = torch.utils.data.DataLoader(
             self.dataset,
             batch_sampler=batch_sampler)
-
+    def update_info(self,index,info):
+        self.datasets[index].info=info
     def load_data(self):
+        
         return self
 
     def __len__(self):

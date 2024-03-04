@@ -28,7 +28,16 @@ class CycleGANModel(BaseModel):
             self.loss_G_B=0
             self.loss_cycle_B=0
             self.loss_idt_B=0
-            
+            self.optimize_D=False
+            self.optimize_C=False
+            self.optimize_G=False
+         
+    def enable_optimizer_D(self,name,enable=True):
+        self.all_data[name].optimize_D=enable
+    def enable_optimizer_C(self,name,enable=True):
+        self.all_data[name].optimize_C=enable
+    def enable_optimizer_G(self,name,enable=True):
+        self.all_data[name].optimize_G=enable
             
             
     """
@@ -344,8 +353,10 @@ class CycleGANModel(BaseModel):
         # self.loss_G=self.losses_G[-1]
         data.loss_G=data.loss_G_A+data.loss_G_B+data.loss_cycle_A+data.loss_cycle_B+data.loss_idt_A+data.loss_idt_B
         #print("loss_G",data.loss_G.shape)
-        data.task_G_A.optimize_layers(data.loss_G)
-        data.task_G_A.optimize_steps_classifiers(classifier_loss,[data.fake_B_steps,data.rec_B_steps,data.idt_A_steps,data.fake_A_steps,data.rec_A_steps,data.idt_B_steps])
+        if data.optimize_G:
+            data.task_G_A.optimize_layers(data.loss_G)
+        if data.optimize_C:
+            data.task_G_A.optimize_steps_classifiers(classifier_loss,[data.fake_B_steps,data.rec_B_steps,data.idt_A_steps,data.fake_A_steps,data.rec_A_steps,data.idt_B_steps])
         #data.task_G_B.optimize_steps_classifiers(data.loss_G,[])
         # #self.task_G_B.optimize_layers2(self.loss_G)
         
@@ -367,7 +378,10 @@ class CycleGANModel(BaseModel):
 
     def optimize_parameters(self):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
+    
         data=self.current_data
+        if not data.optimize_D and not data.optimize_C and not data.optimize_G:
+            return
         # forward
         self.forward()      # compute fake images and reconstruction images.
         # G_A and G_B
@@ -379,7 +393,9 @@ class CycleGANModel(BaseModel):
         # D_A and D_B
         
         self.set_requires_grad([data.netD_A, data.netD_B], True)
-        data.optimizer_D.zero_grad()   # set D_A and D_B's gradients to zero
-        self.backward_D_A(data)      # calculate gradients for D_A
-        self.backward_D_B(data)      # calculate graidents for D_B
-        data.optimizer_D.step()  # update D_A and D_B's weights
+        if data.optimize_D:
+                
+            data.optimizer_D.zero_grad()   # set D_A and D_B's gradients to zero
+            self.backward_D_A(data)      # calculate gradients for D_A
+            self.backward_D_B(data)      # calculate graidents for D_B
+            data.optimizer_D.step()  # update D_A and D_B's weights
