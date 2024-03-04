@@ -285,7 +285,7 @@ class CycleGANModel(BaseModel):
             # self.idt_B_loss=self.idt_B_losses[-1]
             data.loss_idt_B=data.criterionIdt(data.idt_B,data.real_A)*(lambda_A*lambda_idt)
             data.idt_B_steps=data.task_G_B.previous_steps
-            print(data.real_B.shape,data.idt_A.shape)
+            #print(data.real_B.shape,data.idt_A.shape)
             if self.opt.batch_size==1:
                 classifier_loss=classifier_loss+data.loss_idt_A+data.loss_idt_B
             else:
