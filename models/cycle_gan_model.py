@@ -27,6 +27,17 @@ class CycleGANModel(BaseModel):
             self.loss_G_B=0
             self.loss_cycle_B=0
             self.loss_idt_B=0
+            self.optimize_D=False
+            self.optimize_C=False
+            self.optimize_G=False
+         
+    def enable_optimizer_D(self,name,enable=True):
+        self.all_data[name].optimize_D=enable
+    def enable_optimizer_C(self,name,enable=True):
+        self.all_data[name].optimize_C=enable
+    def enable_optimizer_G(self,name,enable=True):
+        self.all_data[name].optimize_G=enable
+            
             
             
     """
@@ -326,16 +337,18 @@ class CycleGANModel(BaseModel):
         # self.losses_G=[loss_G_A+loss_G_B+loss_cycle_A+loss_cycle_B+idt_A_loss+idt_B_loss for loss_G_A,loss_G_B,loss_cycle_A,loss_cycle_B,idt_A_loss,idt_B_loss in zip(self.losses_G_A,self.losses_G_B,self.losses_cycle_A,self.losses_cycle_B,self.idt_A_losses,self.idt_B_losses)]
         # self.loss_G=self.losses_G[-1]
         data.loss_G=data.loss_G_A+data.loss_G_B+data.loss_cycle_A+data.loss_cycle_B+data.loss_idt_A+data.loss_idt_B
-        data.task_G_A.optimize_layers2(data.loss_G)
+        if data.optimize_G:
+            data.task_G_A.optimize_layers2(data.loss_G)
         #self.task_G_B.optimize_layers2(self.loss_G)
+        if data.optimize_C:
         
-        data.task_G_A.optimize_steps_classifier2(data.loss_G,data.fake_B_steps)
-        data.task_G_A.optimize_steps_classifier2(data.loss_G,data.rec_B_steps)
-        data.task_G_A.optimize_steps_classifier2(data.loss_G,data.idt_A_steps)
-        
-        data.task_G_B.optimize_steps_classifier2(data.loss_G,data.fake_A_steps)
-        data.task_G_B.optimize_steps_classifier2(data.loss_G,data.rec_A_steps)
-        data.task_G_B.optimize_steps_classifier2(data.loss_G,data.idt_B_steps)
+            data.task_G_A.optimize_steps_classifier2(data.loss_G,data.fake_B_steps)
+            data.task_G_A.optimize_steps_classifier2(data.loss_G,data.rec_B_steps)
+            data.task_G_A.optimize_steps_classifier2(data.loss_G,data.idt_A_steps)
+            
+            data.task_G_B.optimize_steps_classifier2(data.loss_G,data.fake_A_steps)
+            data.task_G_B.optimize_steps_classifier2(data.loss_G,data.rec_A_steps)
+            data.task_G_B.optimize_steps_classifier2(data.loss_G,data.idt_B_steps)
         
         # self.task_G_A.optimize_parameters(self.losses_G_A,self.task_G_A.previous_steps)
         
@@ -344,6 +357,9 @@ class CycleGANModel(BaseModel):
     def optimize_parameters(self):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
         data=self.current_data
+        if not data.optimize_G and not data.optimize_C and not data.optimize_D:
+            return
+            
         # forward
         self.forward()      # compute fake images and reconstruction images.
         # G_A and G_B
@@ -355,7 +371,8 @@ class CycleGANModel(BaseModel):
         # D_A and D_B
         
         self.set_requires_grad([data.netD_A, data.netD_B], True)
-        data.optimizer_D.zero_grad()   # set D_A and D_B's gradients to zero
-        self.backward_D_A(data)      # calculate gradients for D_A
-        self.backward_D_B(data)      # calculate graidents for D_B
-        data.optimizer_D.step()  # update D_A and D_B's weights
+        if data.optimize_D:
+            data.optimizer_D.zero_grad()   # set D_A and D_B's gradients to zero
+            self.backward_D_A(data)      # calculate gradients for D_A
+            self.backward_D_B(data)      # calculate graidents for D_B
+            data.optimizer_D.step()  # update D_A and D_B's weights

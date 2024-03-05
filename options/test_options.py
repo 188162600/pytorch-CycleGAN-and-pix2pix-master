@@ -21,3 +21,13 @@ class TestOptions(BaseOptions):
         parser.set_defaults(load_size=parser.get_default('crop_size'))
         self.isTrain = False
         return parser
+    def parse(self):
+        opt=super().parse()
+        if len(opt.optimize_G_epoch)==0:
+            opt.optimize_G_epoch=[0]*len(opt.names)
+        if len(opt.optimize_D_epoch)==0:
+            opt.optimize_D_epoch=opt.optimize_G_epoch
+        if len(opt.optimize_C_epoch)==0:
+            opt.optimize_C_epoch=opt.optimize_G_epoch
+        return opt
+

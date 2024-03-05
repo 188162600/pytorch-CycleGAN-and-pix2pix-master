@@ -27,6 +27,9 @@ class TrainOptions(BaseOptions):
         parser.add_argument('--epoch_count', type=int, default=1, help='the starting epoch count, we save the model by <epoch_count>, <epoch_count>+<save_latest_freq>, ...')
         parser.add_argument('--phase', type=str, default='train', help='train, val, test, etc')
         # training parameters
+        parser.add_argument('--optimize_D_epoch',type=int,action='append',default=[])
+        parser.add_argument('--optimize_C_epoch',type=int,action='append',default=[])
+        parser.add_argument('--optimize_G_epoch',type=int,action='append',default=[])
         parser.add_argument('--n_epochs', type=int, default=100, help='number of epochs with the initial learning rate')
         parser.add_argument('--n_epochs_decay', type=int, default=100, help='number of epochs to linearly decay learning rate to zero')
         parser.add_argument('--beta1', type=float, default=0.5, help='momentum term of adam')
@@ -38,3 +41,12 @@ class TrainOptions(BaseOptions):
 
         self.isTrain = True
         return parser
+    def parse(self):
+        opt=super().parse()
+        if len(opt.optimize_G_epoch)==0:
+            opt.optimize_G_epoch=[0]*len(opt.names)
+        if len(opt.optimize_D_epoch)==0:
+            opt.optimize_D_epoch=opt.optimize_G_epoch
+        if len(opt.optimize_C_epoch)==0:
+            opt.optimize_C_epoch=opt.optimize_G_epoch
+        return opt
