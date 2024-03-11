@@ -280,7 +280,7 @@ class CycleGANModel(BaseModel):
         classifier_loss=0
         if lambda_idt > 0:
             # G_A should be identity if real_B is fed: ||G_A(B) - B||
-            data.idt_A=data.task_G_A.forward(data.real_B)
+            data.idt_A=data.task_G_A.forward2(data.real_B)
            # self.idt_A_each_section=self.task_G_A.get_results()
             
             #self.idt_A_losses=[self.criterionIdt(self.idt_A_each_section[i],self.real_B)*(lambda_B*lambda_idt) for i in range(len(self.idt_A_each_section))]
@@ -288,7 +288,7 @@ class CycleGANModel(BaseModel):
             data.idt_A_steps=data.task_G_A.previous_steps
             
             
-            data.idt_B=data.task_G_B.forward(data.real_A)
+            data.idt_B=data.task_G_B.forward2(data.real_A)
             # self.idt_B_each_section=self.task_G_B.get_results()
             # self.idt_B_losses=[self.criterionIdt(self.idt_B_each_section[i],self.real_A)*(lambda_A*lambda_idt) for i in range(len(self.idt_B_each_section))]
             # self.idt_B_loss=self.idt_B_losses[-1]

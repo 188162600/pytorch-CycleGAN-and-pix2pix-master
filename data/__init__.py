@@ -93,6 +93,7 @@ class BoundaryAwareBatchSampler:
         self.total_items = sum(len(batch) for batch in self.batches)
 
     def _generate_batches(self):
+        print("generate batches")
         batches = []
         start_index = 0
         for dataset in self.datasets:

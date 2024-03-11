@@ -86,8 +86,12 @@ class Task:
     
     def get_results(self):
         return self.results
+<<<<<<< Updated upstream
    
     def forward(self,data):
+=======
+    def forward2(self,data):
+>>>>>>> Stashed changes
         # print("task vars",vars(self))
         # print("----------------------------------")
         #
@@ -99,6 +103,7 @@ class Task:
         #     hidden_short_term = previous.tensor
       
         self.previous_steps=[]
+<<<<<<< Updated upstream
         self.results=[]
         # last_features=torch.zeros(1,self.sections[0].input_features_size,device=self.device)
         last_features=data[0].unsqueeze(0)
@@ -109,6 +114,19 @@ class Task:
 
            # print("section.input_features_size",section.input_features_size)
             data=data.detach()
+=======
+        #self.results=[]
+        # last_features=torch.zeros(1,self.sections[0].input_features_size,device=self.device)
+        last_features=data
+        #print("last_features",last_features.device)
+        last_section_steps=None
+        #print("len(self.sections)",len(self.sections))
+        data=list(data)
+        for section in self.sections:
+
+           # print("section.input_features_size",section.input_features_size)
+            #data=data.detach()
+>>>>>>> Stashed changes
             if last_section_steps is not None:
                 last_section_steps.tensor=last_section_steps.tensor.detach()
             
@@ -118,6 +136,7 @@ class Task:
             data=section.forward(data,  last_features  ,last_section_steps,self )
             if section.features is not None:
                 #print("features",section.features[0].shape)
+<<<<<<< Updated upstream
                 last_features_shape=section.features[0].shape
                 last_features=section.features[0].unsqueeze(0)
             last_section_steps=section.next_steps
@@ -126,12 +145,36 @@ class Task:
             #print("len(self.sections),len(self.results)",len(self.sections),len(self.results))
             self.previous_steps.append(last_section_steps)
         return data
+=======
+                #last_features_shape=section.features[0].shape
+                last_features=section.features
+                #print("last_features",last_features.shape)
+            else:
+                last_features=data
+            last_features=torch.stack(last_features,dim=0)
+            last_section_steps=section.next_steps
+
+            #self.results.append(data)
+            #print("len(self.sections),len(self.results)",len(self.sections),len(self.results))
+            self.previous_steps.append(last_section_steps)
+        return torch.stack(data,dim=0)
+    
+>>>>>>> Stashed changes
   
     def set_optimizer(self,index,optimizer,steps_classifier_optimizer):
         self.optimizers[index]=optimizer
         self.steps_classifier_optimizers[index]=steps_classifier_optimizer
+<<<<<<< Updated upstream
    
     def optimize_layers(self,loss):
+=======
+    # def optimize_layers(self,losses):
+    #     for i in range(len(self.sections)):
+    #         self.optimizers[i].zero_grad()
+    #         losses[i].backward()
+    #         self.optimizers[i].step()
+    def optimize_layers2(self,loss):
+>>>>>>> Stashed changes
         for i in range(len(self.sections)):
             self.optimizers[i].zero_grad()
         loss.backward()

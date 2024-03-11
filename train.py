@@ -66,7 +66,14 @@ if __name__ == '__main__':
                 
         dataset_size=len(datasets)
         for i, data in enumerate(datasets):  # inner loop within one epoch
+<<<<<<< Updated upstream
 
+=======
+            # for name in opt.names:
+            #     print(model.all_data[name].optimize_G,model.all_data[name].optimize_C,model.all_data[name].optimize_D)
+            print(i)
+            
+>>>>>>> Stashed changes
             iter_start_time = time.time()  # timer for computation per iteration
             if total_iters % opt.print_freq == 0:
                 t_data = iter_start_time - iter_data_time

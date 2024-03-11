@@ -155,16 +155,43 @@ class Section(nn.Module):
             
         return data
         
+<<<<<<< Updated upstream
     def forward(self,data:torch.Tensor,features:torch.Tensor,previous_steps:NextSteps,task):
         
+=======
+    def forward(self,data:list,features:torch.Tensor,previous_steps:NextSteps,task):
+        # print("section vars",vars(self))
+        # print("-------------------------------------------------")
+>>>>>>> Stashed changes
         assert self.is_setup
         
+<<<<<<< Updated upstream
         
+=======
+        # batch=features.size(0)
+        
+        # features=features[0].view(batch,-1)
+        #print("features",features.shape,self.input_features_size)
+       # print("features.shape,self.input_features_size,self.feature_adjustment",features.shape,self.input_features_size,self.feature_adjustment)
+        
+        #print("features--",features)
+       
+     
+
+        # features=features.detach()
+        
+      
+        #print("features",features.shape)
+        #print("section features--",features.device)
+        # print("features",features.shape)
+        # print("input data",data.shape)
+>>>>>>> Stashed changes
         next_steps=self.classifier.forward(features,previous_steps,task)
        
         self.next_steps=next_steps
       
         layer_with_params_index=0
+<<<<<<< Updated upstream
         #print("len",len(self.is_layer_with_params),self.num_total_layers)
         for i in range(self.num_total_layers):
             
@@ -190,6 +217,47 @@ class Section(nn.Module):
                 self.features=data.clone().detach()
                
          
+=======
+        self.features=[None]*len(data)
+        batch=len(data)
+        
+        
+        for j in range(batch):
+            result=data[j]
+            for i in range(self.num_total_layers):
+                #print("i",i,"j",j)
+                if self.is_layer_with_params[i]:
+                    index=next_steps.indices[layer_with_params_index,j]
+                else:
+                    index=0
+                
+                #print("index i",index,i)
+                #print(next_steps.indices)
+                #print(index)
+                #print("layers",len(self.layers),i)
+                #print(len(self.layers[i]))
+                #print("j",j)
+                layer=self.layers[i][index]
+                result=layer(result)
+                if i==self.last_feature_index:
+                # with torch.no_grad():
+                    self.features[j]=result
+            data[j]=result
+        if self.features[0] is None:
+            self.features=None
+                #result=results[j] if results[j] is not None else data[j]
+                #print("data",data.shape)
+               
+                #print("result",data.shape)
+                
+                #results[j]=result
+                #print("data",data.device)
+           
+                #print(self.features.shape)
+                    #print("section forward self.features.",data.device,self.features.device,self.features.shape)
+        #print("out",torch.stack(results,dim=0).shape)
+                #self.last_feature_index+=1
+>>>>>>> Stashed changes
         return data
     @staticmethod
     def get_steps_classifier_loss(loss,next_steps:NextSteps):
