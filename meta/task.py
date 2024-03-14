@@ -101,7 +101,7 @@ class Task:
         self.previous_steps=[]
         self.results=[]
         # last_features=torch.zeros(1,self.sections[0].input_features_size,device=self.device)
-        last_features=data[0].unsqueeze(0)
+        last_features=data
         #print("last_features",last_features.device)
         last_section_steps=None
         #print("len(self.sections)",len(self.sections))
@@ -119,7 +119,7 @@ class Task:
             if section.features is not None:
                 #print("features",section.features[0].shape)
                 last_features_shape=section.features[0].shape
-                last_features=section.features[0].unsqueeze(0)
+                last_features=section.features
             last_section_steps=section.next_steps
 
             self.results.append(data)

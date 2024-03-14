@@ -113,8 +113,9 @@ class CycleGANModel(BaseModel):
         # self.netG_B = networks.define_G(opt.output_nc, opt.input_nc, opt.ngf, opt.netG, opt.norm,
         #                                 not opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids)
         shape=(opt.input_nc,opt.crop_size,opt.crop_size)
-        
-        self.generator_sections=meta.network.define_resnet_section(opt.num_options,opt.num_pick,
+        num_options=[opt.num_options_upsample,opt.num_options_blocks,opt.num_options_downsample]
+        num_shared=[opt.num_shared_upsample,opt.num_shared_blocks,opt.num_shared_downsample]
+        self.generator_sections=meta.network.define_resnet_sections(num_options,num_shared,
                                                                      opt.input_nc,opt.output_nc,opt.ngf,opt.norm,not opt.no_dropout,8,"reflect",opt.init_type,opt.init_gain,self.gpu_ids)
         dummy_task=meta.task.Task(shape,self.device,[])
         encoders=[opt.downsample_step_classifier_encoder,opt.blocks_step_classifier_encoder,opt.upsample_step_classifier_encoder]

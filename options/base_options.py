@@ -25,8 +25,14 @@ class BaseOptions():
         parser.add_argument('--names', type=str, action='append', default=[], required=True,help='name of the experiment. It decides where to store samples and models')
         parser.add_argument('--gpu_ids', type=str, default='0', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
         parser.add_argument('--checkpoints_dir', type=str, default='./checkpoints', help='models are saved here')
-        parser.add_argument('--num_options', type=int, default=4, help='# of options in each layer')
-        parser.add_argument('--num_pick',type=int,default=2,help='factor to multiply the number of channels in each option')
+        #parser.add_argument('--num_options', type=int, default=4, help='# of options in each layer')
+        parser.add_argument('--num_options_upsample', type=int, default=4, help='# of options in each layer')
+        parser.add_argument('--num_options_downsample', type=int, default=4, help='# of options in each layer')
+        parser.add_argument('--num_options_blocks', type=int, default=12, help='# of options in each layer')
+        parser.add_argument('--num_shared_upsample', type=int, default=0, help='# of options in each layer')
+        parser.add_argument('--num_shared_downsample', type=int, default=0, help='# of options in each layer')
+        parser.add_argument('--num_shared_blocks', type=int, default=4, help='# of options in each layer')
+        
         parser.add_argument('--downsample_step_classifier_encoder',type=str,default="resnet50")
         parser.add_argument('--upsample_step_classifier_encoder',type=str,default="resnet50")
         parser.add_argument('--blocks_step_classifier_encoder',type=str,default="resnet50")
@@ -140,7 +146,7 @@ class BaseOptions():
         if opt.suffix:
             suffix = ('_' + opt.suffix.format(**vars(opt))) if opt.suffix != '' else ''
             opt.name = opt.name + suffix
-        assert opt.num_options>opt.num_pick
+        #assert opt.num_options>opt.num_pick
 
         self.print_options(opt)
 
