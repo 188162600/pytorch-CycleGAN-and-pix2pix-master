@@ -199,12 +199,13 @@ class ResnetBlock(nn.Module):
         
         self.conv1=SelectiveConv2d(dim, dim, kernel_size=3, padding=p, bias=use_bias,groups=num_options_each_layer)
         if use_dropout:
-            self.dropout=nn.Dropout(0.5)
+            self.dropout1=nn.Dropout(0.5)
         else:
-            self.dropout=torch.nn.Identity()
-        self.norm_layer=norm_layer(dim)
-        self.relu=nn.ReLU(True)
+            self.dropout1=torch.nn.Identity()
+        self.norm_layer1=norm_layer(dim)
+        self.relu1=nn.ReLU(True)
         self.conv2=SelectiveConv2d(dim, dim, kernel_size=3, padding=p, bias=use_bias,groups=num_options_each_layer)
+        self.norm_layer2=norm_layer(dim)
         
         
 
@@ -255,12 +256,12 @@ class ResnetBlock(nn.Module):
         """Forward function (with skip connections)"""
         out=self.paddding(x)
         out = self.conv1(out,indices)
-        out = self.norm_layer(out)
-        out = self.relu(out)
-        out=self.dropout(out)
+        out = self.norm_layer1(out)
+        out = self.relu1(out)
+        out=self.dropout1(out)
         out=self.paddding(out)
         out = self.conv2(out,indices)
-        out = self.norm_layer(out)
+        out = self.norm_layer2(out)
         
         out = x + out  # add skip connections
         return out
