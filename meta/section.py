@@ -120,10 +120,11 @@ class Section(nn.Module):
    
 
 
-        self.classifier=NextStepClassifier(self.input_features_shape,self.num_total_layers,self.num_options_each_layer,self.step_classifier_encoder)
+        self.classifier=NextStepClassifier(self.input_features_shape,self.num_total_layers,self.num_options_each_layer,self.step_classifier_encoder) 
         #self.add_module ("next_steps_classifier",self.classifier)
+        del self.base_layers
         self.is_setup=True
-    
+
     def dummy_forward(self,data):
         #print(self.base_layers)
         #print("data",data.shape)
