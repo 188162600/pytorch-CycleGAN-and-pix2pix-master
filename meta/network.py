@@ -169,9 +169,9 @@ def define_resnet_sections(num_options_each_layer,num_shared,input_nc, output_nc
     upsample_section= Section("upsample",upsample_layers,num_options_each_layer[2])
     define_resnet_generator(num_options_each_layer,input_nc, output_nc, ngf, get_norm_layer(norm_type=norm) , use_dropout, n_blocks, padding_type,downsamples= downsample_section,blocks= resnet_section,upsamples=upsample_section,num_shared=num_shared)
     sections= [downsample_section,resnet_section,upsample_section]
-    # for section in sections:
-    #     for layer in section.base_layers:
-    #         init_net(layer, init_type, init_gain, gpu_ids)
+    for section in sections:
+        for layer in section.base_layers:
+            init_net(layer, init_type, init_gain, gpu_ids)
     return sections
 
 class ResnetBlock(nn.Module):
