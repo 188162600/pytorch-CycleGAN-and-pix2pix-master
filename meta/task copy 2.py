@@ -109,11 +109,11 @@ class Task:
 
            # print("section.input_features_size",section.input_features_size)
             #data=data.detach()
-            # if last_section_steps is not None:
-            #     last_section_steps.tensor=last_section_steps.tensor.detach()
+            if last_section_steps is not None:
+                last_section_steps.tensor=last_section_steps.tensor.detach()
             
-            # if last_features is not None:
-            #     last_features=last_features.detach()
+            if last_features is not None:
+                last_features=last_features.detach()
             #print("task forward last_features",last_features.device)
             data=section.forward(data,  last_features  ,last_section_steps,self )
             if section.features is not None:
@@ -138,15 +138,14 @@ class Task:
         for i in range(len(self.sections)):
             self.optimizers[i].step()
     def optimize_steps_classifier(self,loss,previous_steps):
-    
-        return
+        #return
         for i in range(len(self.sections)):
             self.steps_classifier_optimizers[i].zero_grad()
             classifier_loss=self.sections[i].get_steps_classifier_loss(loss.detach(),previous_steps[i])
             classifier_loss.backward()
             self.steps_classifier_optimizers[i].step()
     def optimize_steps_classifiers(self,loss,previous_steps):
-        return
+        #return
         for i in range(len(self.sections)):
             self.steps_classifier_optimizers[i].zero_grad()
             confidence=0

@@ -141,7 +141,7 @@ class Section(nn.Module):
                 data=layer(data,index)
                 
             if self.is_encoder(layer):
-                    self.features=data.clone().detach()
+                    self.features=data#.clone().detach()
                     print("self.features.shape",self.features.shape)
         # print("features",self.features.shape)
             #print("data",data.shape)
@@ -154,7 +154,8 @@ class Section(nn.Module):
         
         
         next_steps=self.classifier.forward(features,previous_steps,task)
-        #print("next_steps",next_steps.indices)
+        
+        print("next_steps",next_steps.indices)
         self.next_steps=next_steps
       
         layer_with_params_index=0
@@ -167,7 +168,7 @@ class Section(nn.Module):
             else:
                 data=self.layers[i](data)
             if i==self.last_feature_index:
-                self.features=data.clone().detach()
+                self.features=data#.clone().detach()
             layer_with_params_index+=1
                
          
