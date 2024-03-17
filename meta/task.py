@@ -134,9 +134,11 @@ class Task:
     def optimize_layers(self,loss):
         for i in range(len(self.sections)):
             self.optimizers[i].zero_grad()
+            self.steps_classifier_optimizers[i].zero_grad()
         loss.backward()
         for i in range(len(self.sections)):
             self.optimizers[i].step()
+            self.steps_classifier_optimizers[i].step()
     def optimize_steps_classifier(self,loss,previous_steps):
     
         return

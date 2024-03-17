@@ -155,7 +155,7 @@ class Section(nn.Module):
         
         next_steps=self.classifier.forward(features,previous_steps,task)
         
-        print("next_steps",next_steps.indices)
+        #print("next_steps",next_steps.indices)
         self.next_steps=next_steps
       
         layer_with_params_index=0
