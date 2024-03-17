@@ -108,7 +108,7 @@ class Task:
         for section in self.sections:
 
            # print("section.input_features_size",section.input_features_size)
-            data=data.detach()
+            #data=data.detach()
             if last_section_steps is not None:
                 last_section_steps.tensor=last_section_steps.tensor.detach()
             
@@ -138,12 +138,14 @@ class Task:
         for i in range(len(self.sections)):
             self.optimizers[i].step()
     def optimize_steps_classifier(self,loss,previous_steps):
+        #return
         for i in range(len(self.sections)):
             self.steps_classifier_optimizers[i].zero_grad()
             classifier_loss=self.sections[i].get_steps_classifier_loss(loss.detach(),previous_steps[i])
             classifier_loss.backward()
             self.steps_classifier_optimizers[i].step()
     def optimize_steps_classifiers(self,loss,previous_steps):
+        #return
         for i in range(len(self.sections)):
             self.steps_classifier_optimizers[i].zero_grad()
             confidence=0
