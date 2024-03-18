@@ -208,7 +208,7 @@ class NextStepClassifier(nn.Module):
             hx = torch.zeros(batch, self.num_step_classes ,self.num_next_steps,
                                             device=features.device)
         else:
-            hx = previous.tensor#.clone().detach()
+            hx = previous.tensor.clone().detach()
      
         if hx.size(1)!=self.num_step_classes or hx.size(2)!=self.num_next_steps:
             hx=hx.unsqueeze(0)
