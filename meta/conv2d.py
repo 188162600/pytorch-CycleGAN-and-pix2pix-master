@@ -122,12 +122,12 @@ class _SelectiveConvNd(torch.nn.Module):
 
         if transposed:
             self.weight = Parameter(torch.empty(
-                (in_channels,groups, out_channels, *kernel_size), **factory_kwargs))
+                (groups,in_channels, out_channels, *kernel_size), **factory_kwargs))
         else:
             self.weight = Parameter(torch.empty(
-                (out_channels,groups, in_channels, *kernel_size), **factory_kwargs))
+                (groups,out_channels, in_channels, *kernel_size), **factory_kwargs))
         if bias:
-            self.bias = Parameter(torch.empty(out_channels,groups, **factory_kwargs))
+            self.bias = Parameter(torch.empty(groups,out_channels, **factory_kwargs))
         else:
             self.register_parameter('bias', None)
 
@@ -244,11 +244,11 @@ class SelectiveConv2d(_SelectiveConvNd):
 
         assert len(indices.shape)==1 and batch_size==indices.size(0)
 
-        channels_a,_,channels_b,kernel_height, kernel_width=self.weight.shape
-        weight=self.weight[:,indices,:,:,:]
+        _,channels_a,channels_b,kernel_height, kernel_width=self.weight.shape
+        weight=self.weight[indices,:,:,:,:]
 
         weight=weight.view(channels_a*batch_size,channels_b,kernel_height, kernel_width)
-        bias=self.bias[:,indices].view(self.out_channels*batch_size)
+        bias=self.bias[indices].view(self.out_channels*batch_size)
         result=self._conv_forward(input, weight, bias, batch_size)
         #print("result",result.shape)
         return result.view(batch_size,-1,result.size(2),result.size(3))
@@ -297,11 +297,11 @@ class SelectiveConvTranspose2d(_SelectiveConvNd):
 
         assert len(indices.shape) == 1 and batch_size == indices.size(0)
 
-        channels_a, _,channels_b, kernel_height, kernel_width = self.weight.shape
-        weight = self.weight[:, indices,:, :, :]
+        _, channels_a, channels_b, kernel_height, kernel_width = self.weight.shape
+        weight = self.weight[indices, :, :, :, :]
 
         weight = weight.view(channels_a * batch_size, channels_b, kernel_height, kernel_width)
-        bias = self.bias[:,indices].view(self.out_channels * batch_size)
+        bias = self.bias[indices].view(self.out_channels * batch_size)
 
         result = F.conv_transpose2d(
             input, weight, bias, self.stride, self.padding,
