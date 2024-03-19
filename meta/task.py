@@ -166,9 +166,9 @@ class Task:
                 for steps in previous_steps:
                 #for i in range(len(self.sections)):
                     confidence=confidence+steps[i].confidence
-                print("loss",loss.shape)
+                #print("loss",loss.shape)
                 loss=loss.detach()*confidence
-                print("loss",loss.shape)
+                #print("loss",loss.shape)
                 self._backward(loss)
                 #(loss.detach()*confidence).backward()
             #for i in range(len(self.sections)):
