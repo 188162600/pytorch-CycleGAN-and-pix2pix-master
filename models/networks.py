@@ -228,6 +228,8 @@ class L1Loss(nn.L1Loss):
         if reduction=='batch_mean':
             reduction='none'
             self.batch_mean=True
+        else:
+            self.batch_mean=False
         super().__init__(size_average, reduce, reduction)
     def forward(self, input, target):
         #print(self.reduction)
@@ -239,16 +241,21 @@ class MSELoss(nn.MSELoss):
         if reduction=='batch_mean':
             reduction='none'
             self.batch_mean=True
+        else:
+            self.batch_mean=False
         super().__init__(size_average, reduce, reduction)
     def forward(self, input, target):
         if self.batch_mean:
             return batch_mean(super().forward(input, target))
+        
         return super().forward(input, target)
 class BCELoss(nn.BCELoss):
     def __init__(self, size_average=None, reduce=None, reduction: str = 'mean') -> None:
         if reduction=='batch_mean':
             reduction='none'
             self.batch_mean=True
+        else:
+            self.batch_mean=False
         super().__init__(size_average, reduce, reduction)
     def forward(self, input, target):
         if self.batch_mean:
