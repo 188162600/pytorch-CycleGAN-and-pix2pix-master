@@ -224,7 +224,7 @@ class BaseModel(ABC):
                 #     continue
                 for loss_name in self.loss_names:
                     if isinstance(name, str):
-                        errors_ret[name+'_'+loss_name] = float(torch.mean( getattr(data, 'loss_' + loss_name)))
+                        errors_ret[name+'_'+loss_name] = float(torch.mean( getattr(data, 'loss_' + loss_name)).item())
                   
        
         return errors_ret
