@@ -220,7 +220,7 @@ class BaseModel(ABC):
                 return float(loss.item())
             return float(torch.mean(loss).item())
         else:
-            return float(loss)
+            return loss
     def get_current_losses(self):
         """Return traning losses / errors. train.py will print out these errors on console, and save them to a file"""
         with torch.no_grad():
@@ -231,7 +231,7 @@ class BaseModel(ABC):
                 #     continue
                 for loss_name in self.loss_names:
                     if isinstance(name, str):
-                        errors_ret[name+'_'+loss_name] = self._get_loss(getattr(data, loss_name))
+                        errors_ret[name+'_'+loss_name] = self._get_loss(getattr(data,  'loss_' + loss_name))
                   
        
         return errors_ret
