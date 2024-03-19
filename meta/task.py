@@ -7,7 +7,7 @@ from meta.next_steps import NextSteps
 
 
 class Task:
-    def __init__(self,input_shape,device,sections:list) -> None:
+    def __init__(self,input_shape,device,sections:list,separate_classifier_backward) -> None:
        
         #print(input_shape)
         self.device=device
@@ -20,6 +20,7 @@ class Task:
         self.sections=[]
         self.extend_sections(sections)  
         self.hidden_long_term=dict()
+        self.separate_classifier_backward=separate_classifier_backward
         
     def append_section(self,section:Section):
         #section.to(self.device)
@@ -109,11 +110,13 @@ class Task:
 
            # print("section.input_features_size",section.input_features_size)
             #data=data.detach()
-            if last_section_steps is not None:
-                last_section_steps.tensor=last_section_steps.tensor.detach()
-            
-            if last_features is not None:
-                last_features=last_features.detach()
+            if self.separate_classifier_backward:
+                if last_section_steps is not None:
+                    last_section_steps.tensor=last_section_steps.tensor.detach()
+                
+                if last_features is not None:
+                    last_features=last_features.detach()
+                
             #print("task forward last_features",last_features.device)
             data=section.forward(data,  last_features  ,last_section_steps,self )
             if section.features is not None:
@@ -130,30 +133,46 @@ class Task:
     def set_optimizer(self,index,optimizer,steps_classifier_optimizer):
         self.optimizers[index]=optimizer
         self.steps_classifier_optimizers[index]=steps_classifier_optimizer
-   
+    @staticmethod
+    def _backward(loss:torch.Tensor):
+        if len(loss.shape)==0:
+            loss.backward()
+        else:
+            #print("loss",loss.shape)
+            assert len(loss.shape)==1
+            loss.mean().backward()
+            
     def optimize_layers(self,loss):
         for i in range(len(self.sections)):
             self.optimizers[i].zero_grad()
-        loss.backward()
+        self._backward(loss)
+        #loss.backward()
         for i in range(len(self.sections)):
             self.optimizers[i].step()
-    def optimize_steps_classifier(self,loss,previous_steps):
-        for i in range(len(self.sections)):
-            self.steps_classifier_optimizers[i].zero_grad()
-            classifier_loss=self.sections[i].get_steps_classifier_loss(loss.detach(),previous_steps[i])
-            classifier_loss.backward()
-            self.steps_classifier_optimizers[i].step()
-    def optimize_steps_classifiers(self,loss,previous_steps):
+    # def optimize_steps_classifier(self,loss,previous_steps):
         
-        for i in range(len(self.sections)):
-            self.steps_classifier_optimizers[i].zero_grad()
-            confidence=0
-            for steps in previous_steps:
+    #     for i in range(len(self.sections)):
+    #         self.steps_classifier_optimizers[i].zero_grad()
+    #         classifier_loss=self.sections[i].get_steps_classifier_loss(loss.detach(),previous_steps[i])
+    #         classifier_loss.backward()
+    #         self.steps_classifier_optimizers[i].step()
+    def optimize_steps_classifiers(self,loss,previous_steps):
+        if  self.separate_classifier_backward:
+             
+        
+            for i in range(len(self.sections)):
+                self.steps_classifier_optimizers[i].zero_grad()
+                confidence=0
+                for steps in previous_steps:
+                #for i in range(len(self.sections)):
+                    confidence=confidence+steps[i].confidence
+                print("loss",loss.shape)
+                loss=loss.detach()*confidence
+                print("loss",loss.shape)
+                self._backward(loss)
+                #(loss.detach()*confidence).backward()
             #for i in range(len(self.sections)):
-                confidence=confidence+steps[i].confidence
-            (loss.detach()*confidence).backward()
-        #for i in range(len(self.sections)):
-            self.steps_classifier_optimizers[i].step()
+                self.steps_classifier_optimizers[i].step()
             
     # def optimize_parameters(self,losses,previous_steps):
     #     for i in range(len(self.sections)):

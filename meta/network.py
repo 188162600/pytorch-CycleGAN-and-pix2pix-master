@@ -204,11 +204,50 @@ class ResnetBlock(nn.Module):
         else:
             self.dropout1=torch.nn.Identity()
         self.norm_layer1=norm_layer(dim)
-        self.relu1=nn.ReLU(True)
+        self.relu1=nn.ReLU(False)
         self.conv2=SelectiveConv2d(dim, dim, kernel_size=3, padding=p, bias=use_bias,groups=num_options_each_layer)
         self.norm_layer2=norm_layer(dim)
         
         
+        #     def build_conv_block(self, dim, padding_type, norm_layer, use_dropout, use_bias):
+        # """Construct a convolutional block.
+
+        # Parameters:
+        #     dim (int)           -- the number of channels in the conv layer.
+        #     padding_type (str)  -- the name of padding layer: reflect | replicate | zero
+        #     norm_layer          -- normalization layer
+        #     use_dropout (bool)  -- if use dropout layers.
+        #     use_bias (bool)     -- if the conv layer uses bias or not
+
+        # Returns a conv block (with a conv layer, a normalization layer, and a non-linearity layer (ReLU))
+        # """
+        # conv_block = []
+        # p = 0
+        # if padding_type == 'reflect':
+        #     conv_block += [nn.ReflectionPad2d(1)]
+        # elif padding_type == 'replicate':
+        #     conv_block += [nn.ReplicationPad2d(1)]
+        # elif padding_type == 'zero':
+        #     p = 1
+        # else:
+        #     raise NotImplementedError('padding [%s] is not implemented' % padding_type)
+
+        # conv_block += [nn.Conv2d(dim, dim, kernel_size=3, padding=p, bias=use_bias), norm_layer(dim), nn.ReLU(False)]
+        # if use_dropout:
+        #     conv_block += [nn.Dropout(0.5)]
+
+        # p = 0
+        # if padding_type == 'reflect':
+        #     conv_block += [nn.ReflectionPad2d(1)]
+        # elif padding_type == 'replicate':
+        #     conv_block += [nn.ReplicationPad2d(1)]
+        # elif padding_type == 'zero':
+        #     p = 1
+        # else:
+        #     raise NotImplementedError('padding [%s] is not implemented' % padding_type)
+        # conv_block += [nn.Conv2d(dim, dim, kernel_size=3, padding=p, bias=use_bias), norm_layer(dim)]
+
+        # return nn.Sequential(*conv_block)
 
         # self.conv_block = self.build_conv_block(num_options_each_layer,dim, padding_type, norm_layer, use_dropout, use_bias)
 

@@ -117,7 +117,7 @@ class CycleGANModel(BaseModel):
         num_shared=[opt.num_shared_upsample,opt.num_shared_blocks,opt.num_shared_downsample]
         self.generator_sections=meta.network.define_resnet_sections(num_options,num_shared,
                                                                      opt.input_nc,opt.output_nc,opt.ngf,opt.norm,not opt.no_dropout,8,"reflect",opt.init_type,opt.init_gain,self.gpu_ids)
-        dummy_task=meta.task.Task(shape,self.device,[])
+        dummy_task=meta.task.Task(shape,self.device,[],self.opt.separate_classifier_backward)
         encoders=[opt.downsample_step_classifier_encoder,opt.blocks_step_classifier_encoder,opt.upsample_step_classifier_encoder]
         for i,section in enumerate( self.generator_sections):
             channels=dummy_task.dummy_features.size(1)
@@ -126,11 +126,19 @@ class CycleGANModel(BaseModel):
         
         self.all_data=dict()
         dummy=torch.zeros(1,*shape)
+        if opt.separate_classifier_backward and opt.accurate_classifier_backward:
+            
+            reduction_mode="batch_mean"
+        else:
+         
+            reduction_mode="mean"
+            
+        
         for name in opt.names:
             data=self.Data(dummy)
             self.all_data.update({name:data})
-            data.task_G_A=meta.task.Task(shape,self.device,[])
-            data.task_G_B=meta.task.Task(shape,self.device,[])
+            data.task_G_A=meta.task.Task(shape,self.device,[],opt.separate_classifier_backward)
+            data.task_G_B=meta.task.Task(shape,self.device,[],opt.separate_classifier_backward)
             data.task_G_A.extend_sections(self.generator_sections)
             data.task_G_B.extend_sections(self.generator_sections)
               
@@ -146,9 +154,10 @@ class CycleGANModel(BaseModel):
                 data.fake_A_pool = ImagePool(opt.pool_size)  # create image buffer to store previously generated images
                 data.fake_B_pool = ImagePool(opt.pool_size)  # create image buffer to store previously generated images
                 # define loss functions
-                data.criterionGAN = networks.GANLoss(opt.gan_mode).to(self.device)  # define GAN loss.
-                data.criterionCycle = torch.nn.L1Loss()
-                data.criterionIdt = torch.nn.L1Loss()
+            
+                data.criterionGAN = networks.GANLoss(opt.gan_mode,reduction=reduction_mode).to(self.device)  # define GAN loss.
+                data.criterionCycle = networks.L1Loss(reduction=reduction_mode)    # define cycle loss
+                data.criterionIdt = networks.L1Loss(reduction=reduction_mode)
                 # initialize optimizers; schedulers will be automatically created by function <BaseModel.setup>.
                 #self.optimizer_G = torch.optim.Adam(itertools.chain(self.netG_A.parameters(), self.netG_B.parameters()), lr=opt.lr, betas=(opt.beta1, 0.999))
             
@@ -249,18 +258,20 @@ class CycleGANModel(BaseModel):
         loss_D_fake = data.criterionGAN(pred_fake, False)
         # Combined loss and calculate gradients
         loss_D = (loss_D_real + loss_D_fake) * 0.5
-        loss_D.backward()
+        
+        #loss_D.backward()
         return loss_D
 
     def backward_D_A(self,data):
         """Calculate GAN loss for discriminator D_A"""
         fake_B = data.fake_B_pool.query(data.fake_B)
         data.loss_D_A = self.backward_D_basic(data.netD_A, data.real_B, fake_B,data)
-
+       
     def backward_D_B(self,data):
         """Calculate GAN loss for discriminator D_B"""
         fake_A = data.fake_A_pool.query(data.fake_A)
         data.loss_D_B = self.backward_D_basic(data.netD_B, data.real_A, fake_A,data)
+     
 
     def backward_G(self,data):
         """Calculate the loss for generators G_A and G_B"""
@@ -285,7 +296,7 @@ class CycleGANModel(BaseModel):
            # self.idt_A_each_section=self.task_G_A.get_results()
             
             #self.idt_A_losses=[self.criterionIdt(self.idt_A_each_section[i],self.real_B)*(lambda_B*lambda_idt) for i in range(len(self.idt_A_each_section))]
-            data.loss_idt_A=data.criterionIdt(data.idt_A,data.real_B)*(lambda_B*lambda_idt)
+            data.loss_idt_A= data.criterionIdt(data.idt_A,data.real_B)*(lambda_B*lambda_idt)
             data.idt_A_steps=data.task_G_A.previous_steps
             
             
@@ -293,7 +304,7 @@ class CycleGANModel(BaseModel):
             # self.idt_B_each_section=self.task_G_B.get_results()
             # self.idt_B_losses=[self.criterionIdt(self.idt_B_each_section[i],self.real_A)*(lambda_A*lambda_idt) for i in range(len(self.idt_B_each_section))]
             # self.idt_B_loss=self.idt_B_losses[-1]
-            data.loss_idt_B=data.criterionIdt(data.idt_B,data.real_A)*(lambda_A*lambda_idt)
+            data.loss_idt_B= data.criterionIdt(data.idt_B,data.real_A)*(lambda_A*lambda_idt)
             data.idt_B_steps=data.task_G_B.previous_steps
             #print(data.real_B.shape,data.idt_A.shape)
             if self.opt.batch_size==1:
@@ -337,14 +348,14 @@ class CycleGANModel(BaseModel):
         # self.losses_cycle_B=[self.criterionCycle(rec_B_each_section,self.real_B) for rec_B_each_section in self.rec_B_each_section]
         # self.loss_cycle_B=self.losses_cycle_B[-1]
         data.loss_cycle_B=data.criterionCycle(data.rec_B,data.real_B)*lambda_B
-        if self.opt.batch_size==1:
-            classifier_loss=classifier_loss+data.loss_cycle_A+data.loss_cycle_B+data.loss_idt_A+data.loss_idt_B
-        else:
-            with torch.no_grad():
-                classifier_loss=classifier_loss+data.criterionGAN(data.netD_A(data.fake_B[0]),True)
-                classifier_loss=classifier_loss+data.criterionGAN(data.netD_B(data.fake_A[0]),True)
-                classifier_loss=classifier_loss+data.criterionCycle(data.rec_A[0],data.real_A[0])*lambda_A
-                classifier_loss=classifier_loss+data.criterionCycle(data.rec_B[0],data.real_B[0])*lambda_B
+        #if self.opt.batch_size==1:
+        classifier_loss=classifier_loss+data.loss_cycle_A+data.loss_cycle_B+data.loss_idt_A+data.loss_idt_B
+        # else:
+        #     with torch.no_grad():
+        #         classifier_loss=classifier_loss+self.loss_reduction_function(data.criterionGAN(data.netD_A(data.fake_B[0]),True))
+        #         classifier_loss=classifier_loss+self.loss_reduction_function(data.criterionGAN(data.netD_B(data.fake_A[0]),True))
+        #         classifier_loss=classifier_loss+self.loss_reduction_function(data.criterionCycle(data.rec_A[0],data.real_A[0])*lambda_A)
+        #         classifier_loss=classifier_loss+self.loss_reduction_function(data.criterionCycle(data.rec_B[0],data.real_B[0])*lambda_B)
                 
             
         

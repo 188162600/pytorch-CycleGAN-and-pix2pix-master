@@ -110,6 +110,8 @@ import torch.nn as nn
 
 import torch
 import torch.nn as nn
+from util.util import linear_interp
+import math
 
 # class NextSteps:
 #     def __init__(self, tensor: torch.Tensor, num_step_classes, num_next_steps):
@@ -144,24 +146,152 @@ import torch.nn as nn
 #         #print("probablity",torch.gather(softmax, 0, indices))
 #         return indices
 
+# class NextSteps:
+#     def __init__(self, tensor: torch.Tensor,index:torch.Tensor=None,softmax:torch.Tensor=None,probability:torch.Tensor=None,confidence:torch.Tensor=None,restored_step_index=None):
+#         #print("tensor1",tensor.shape)
+        
+#         self.tensor = tensor
+#         #print("tensor2",tensor.shape)
+        
+#         if index is None:
+#             self.indices = torch.argmax(tensor,dim=1)
+#         else :
+#             self.indices=index
+#         # print(self.indices)
+#         # print("self.indices.shape,self.tensor.shape",self.indices.shape,self.tensor.shape)
+#         expanded_indices = self.indices.unsqueeze(-1)
+#         if softmax is None:
+#             self.softmax = torch.softmax(self.tensor, dim=1)
+#         else:
+#             self.softmax=softmax
+       
+#         if probability is None:
+#             self.probability = torch.gather(self.softmax, 1,expanded_indices)
+#         else:
+#             self.probability=probability
+#         if confidence is None:
+#             print("self.probability",self.probability.shape)
+#             self.confidence=torch.sum(self.probability,dim=1)
+#         else:
+#             self.confidence=confidence
+#         self.restored_step_index=restored_step_index
+     
+        
+# class RestoredSteps:
+#     def __init__(self,num_steps,num_options,num_old,num_new,num_tracking_sample,num_tracking) -> None:
+#         self.softmax=torch.zeros(num_old+num_new+num_tracking,num_steps,num_options)
+#         self.indices=torch.zeros(num_old+num_new+num_tracking,num_steps,dtype=torch.long)
+        
+#         self.losses=torch.zeros(num_old+num_new+num_tracking,num_tracking_sample)
+#         self.occurrences=torch.zeros(num_old+num_new+num_tracking,dtype=torch.long)
+
+        
+#         self.num_sample=torch.zeros(num_old+num_new+num_tracking,dtype=torch.long)
+        
+        
+        
+#         self.tracking_index=num_new+num_old
+        
+         
+#         torch.fill_(self.losses,math.inf)
+       
+#         self.num_tracking=num_tracking
+#         self.num_old=num_old
+#         self.num_new=num_new
+#     def aggregate_losses(self):
+#         # Unique occurrences
+#         unique_occurrences, indices = torch.unique(self.occurrences, return_inverse=True)
+#         # Initialize tensor for aggregated losses
+#         aggregated_losses = torch.zeros_like(unique_occurrences, dtype=torch.float)
+
+#         for i, occ in enumerate(unique_occurrences):
+#             # Indices of all tracking events with the current occurrence
+#             idx = (indices == i)
+#             # Select the corresponding losses and sample counts
+#             occ_losses = self.losses[idx]
+#             occ_samples = self.num_sample[idx]
+
+#             # Aggregate losses by calculating the mean for each occurrence
+#             total_loss = 0
+#             total_samples = 0
+#             for j, samples in enumerate(occ_samples):
+#                 if samples > 0:  # Ensure division is meaningful
+#                     total_loss += occ_losses[j, :samples].sum()
+#                     total_samples += samples
+#             if total_samples > 0:  # Avoid division by zero
+#                 aggregated_losses[i] = total_loss / total_samples
+#             # else:
+#             #     aggregated_losses[i]=math.inf
+
+#         return unique_occurrences.float(), aggregated_losses
+
+#     def linear_interp_loss(self, occurrence):
+#         # Assuming torch_linear_interp is defined as before
+#         occurrences, aggregated_losses = self.aggregate_losses()
+
+#         # Make sure occurrences are sorted
+#         sorted_indices = torch.argsort(occurrences)
+#         sorted_occurrences = occurrences[sorted_indices]
+#         sorted_losses = aggregated_losses[sorted_indices]
+
+#         # Interpolate
+#         interp_val = linear_interp(occurrence, sorted_occurrences, sorted_losses)
+#         return interp_val
+#     def get_losses(self):
+#         pass 
+#     def get_efficiency(self):
+#         expected_loss=self.linear_interp_loss(self.occurrences)
+#         diff= expected_loss-self.get_losses()
+#         return diff
+        
+ 
+        
+#     def track(self,next_steps:NextSteps,loss):
+#         self.losses[self.tracking_index]=loss
+        
+#         batch=next_steps.tensor.size(0)
+#         self.softmax[self.tracking_index:self.tracking_index+batch]=next_steps.probability
+#         self.indices[self.tracking_index:self.tracking_index+batch]=next_steps.indices
+#         self.losses[self.tracking_index:self.tracking_index+batch]=loss
+#         self.tracking_index+=batch
+#         if self.tracking_index%self.num_tracking==0:
+#             self.tracking_index=self.num_old+self.num_new
+
+#     def update(self,batch):
+       
+        
+#         torch.fill_(self.losses[self.num_old+self.num_new:],math.inf)
+
+        
+#         pass 
+#     def get(self,next_steps):
+#         pass 
+
 class NextSteps:
     def __init__(self, tensor: torch.Tensor):
         #print("tensor1",tensor.shape)
         
         self.tensor = tensor
         #print("tensor2",tensor.shape)
-      
+        
+       
         self.indices = torch.argmax(tensor,dim=1)
+       
         # print(self.indices)
         # print("self.indices.shape,self.tensor.shape",self.indices.shape,self.tensor.shape)
         expanded_indices = self.indices.unsqueeze(-1)
-
-        self.softmax = torch.softmax(self.tensor, dim=1)
        
-        self.probability = torch.gather(self.softmax, 1,expanded_indices)
-        self.confidence=torch.sum(self.probability)
+        self.softmax = torch.softmax(self.tensor, dim=1)
         
+       
         
+        self.probability = torch.gather(self.softmax, 1,expanded_indices) .squeeze(-1)
+        #print("self.probability",self.probability.shape)
+    
+         
+        self.confidence=torch.sum(self.probability,dim=1)
+        #print("self.confidence",self.confidence.shape)
+       
 class NextStepClassifier(nn.Module):
     def __init__(self, in_features_shape, num_next_steps, num_step_classes,encoder):
         super(NextStepClassifier, self).__init__()
@@ -208,7 +338,7 @@ class NextStepClassifier(nn.Module):
             hx = torch.zeros(batch, self.num_step_classes ,self.num_next_steps,
                                             device=features.device)
         else:
-            hx = previous.tensor.clone().detach()
+            hx = previous.tensor #.clone().detach()
      
         if hx.size(1)!=self.num_step_classes or hx.size(2)!=self.num_next_steps:
             hx=hx.unsqueeze(0)

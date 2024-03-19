@@ -20,6 +20,7 @@ class BaseOptions():
     def initialize(self, parser):
         """Define the common options that are used in both training and test."""
         # basic parameters
+        
         parser.add_argument('--dataroot',type=str,action='append',default=[],required=True, help='path to images (should have subfolders trainA, trainB, valA, valB, etc)')
         parser.add_argument('--project_name', type=str, default=None, help='name of the experiment. It decides where to store samples and models')
         parser.add_argument('--names', type=str, action='append', default=[], required=True,help='name of the experiment. It decides where to store samples and models')
@@ -36,6 +37,24 @@ class BaseOptions():
         parser.add_argument('--downsample_step_classifier_encoder',type=str,default="resnet50")
         parser.add_argument('--upsample_step_classifier_encoder',type=str,default="resnet50")
         parser.add_argument('--blocks_step_classifier_encoder',type=str,default="resnet50")
+        
+       
+        parser.add_argument('--num_saved_steps',type=int,default=128)
+        parser.add_argument('--num_new_steps',type=int,default=16)
+        parser.add_argument('--new_steps_additional_train',type=float,default=0.5)
+        #count distribution of occurances
+        #count distribution of accuracy based on occurance
+        #
+        #50 50 use curent or new and old
+        #schedule additional trian to new
+        #tracking all
+        #estimate efficiency
+        #rank all efficiency
+        #remove all
+        #rank occurance to order new and old
+        #
+        
+        parser.add_argument('--num_tracking',type=int,default=4096)
         
         # model parameters
         parser.add_argument('--model', type=str, default='cycle_gan', help='chooses which model to use. [cycle_gan | pix2pix | test | colorization]')

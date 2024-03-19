@@ -216,14 +216,15 @@ class BaseModel(ABC):
 
     def get_current_losses(self):
         """Return traning losses / errors. train.py will print out these errors on console, and save them to a file"""
-        errors_ret = OrderedDict()
-        for name in self.opt.names:
-            data=self.all_data[name]
-            # if data.empty:
-            #     continue
-            for loss_name in self.loss_names:
-                if isinstance(name, str):
-                    errors_ret[name+'_'+loss_name] = float(getattr(data, 'loss_' + loss_name))
+        with torch.no_grad():
+            errors_ret = OrderedDict()
+            for name in self.opt.names:
+                data=self.all_data[name]
+                # if data.empty:
+                #     continue
+                for loss_name in self.loss_names:
+                    if isinstance(name, str):
+                        errors_ret[name+'_'+loss_name] = float(torch.mean( getattr(data, 'loss_' + loss_name)))
                   
        
         return errors_ret

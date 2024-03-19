@@ -101,3 +101,23 @@ def mkdir(path):
     """
     if not os.path.exists(path):
         os.makedirs(path)
+        
+def linear_interp(x:torch.Tensor, xp:torch.Tensor, fp:torch.Tensor):
+    """
+    Linear interpolation on PyTorch tensors.
+    :param x: The x-coordinates at which to evaluate the interpolated values.
+    :param xp: The x-coordinates of the data points, must be increasing.
+    :param fp: The y-coordinates of the data points, same length as xp.
+    :return: Interpolated values same shape as x.
+    """
+    # Find indices of the nearest x points, such that xp[ind-1] < x <= xp[ind]
+    ind = torch.searchsorted(xp, x, right=True)
+    ind = ind.clamp(min=1, max=len(xp)-1)
+    xp_left = xp[ind - 1]
+    xp_right = xp[ind]
+    fp_left = fp[ind - 1]
+    fp_right = fp[ind]
+
+    # Linear interpolation formula
+    interp_val = fp_left + (x - xp_left) * (fp_right - fp_left) / (xp_right - xp_left)
+    return interp_val

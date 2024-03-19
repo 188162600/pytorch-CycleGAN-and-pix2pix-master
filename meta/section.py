@@ -5,9 +5,11 @@ import torch.nn as nn
 import copy
 from meta.next_steps import NextSteps
 from meta.next_steps import NextStepClassifier
+from scipy.interpolate import interp1d
 
 from meta.conv2d import SelectiveConv2d
 
+        
 class Section(nn.Module):
     def __init__(self,name,layers,num_options_each_layer,is_encoder=lambda x:isinstance(x,(nn.Conv2d,SelectiveConv2d))) -> None:
         super().__init__()
@@ -30,6 +32,8 @@ class Section(nn.Module):
         self.num_shared_layers=[]
         self.shared_index=[]
         self.extend_layers(layers)
+        #self.restored_steps=None
+        
   
     def save_network(self,path):
         #print(vars(self))
@@ -117,10 +121,13 @@ class Section(nn.Module):
    
         self.last_sections_steps.append(self.num_total_layers)
         self.last_sections_step=max(self.last_sections_steps)
+        
+        
    
 
 
         self.classifier=NextStepClassifier(self.input_features_shape,self.num_total_layers,self.num_options_each_layer,self.step_classifier_encoder) 
+        
         #self.add_module ("next_steps_classifier",self.classifier)
         del self.base_layers
         self.is_setup=True
@@ -167,7 +174,7 @@ class Section(nn.Module):
             else:
                 data=self.layers[i](data)
             if i==self.last_feature_index:
-                self.features=data.clone().detach()
+                self.features=data.clone()
             layer_with_params_index+=1
                
          

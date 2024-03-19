@@ -210,6 +210,51 @@ def define_D(input_nc, ndf, netD, n_layers_D=3, norm='batch', init_type='normal'
 ##############################################################################
 # Classes
 ##############################################################################
+def batch_mean(x):
+    return x.mean(dim=tuple(range(1,x.dim())))
+def reduce_loss(x, reduction: str = 'mean'):
+    match reduction:
+        case 'mean':
+            return x.mean()
+        case 'sum':
+            return x.sum()
+        case 'none':
+            return x
+        case 'batch_mean':
+            return batch_mean(x)
+        
+class L1Loss(nn.L1Loss):
+    def __init__(self, size_average=None, reduce=None, reduction: str = 'mean') -> None:
+        if reduction=='batch_mean':
+            reduction='none'
+            self.batch_mean=True
+        super().__init__(size_average, reduce, reduction)
+    def forward(self, input, target):
+        #print(self.reduction)
+        if self.batch_mean:
+            return batch_mean(super().forward(input, target))
+        return super().forward(input, target)
+class MSELoss(nn.MSELoss):
+    def __init__(self, size_average=None, reduce=None, reduction: str = 'mean') -> None:
+        if reduction=='batch_mean':
+            reduction='none'
+            self.batch_mean=True
+        super().__init__(size_average, reduce, reduction)
+    def forward(self, input, target):
+        if self.batch_mean:
+            return batch_mean(super().forward(input, target))
+        return super().forward(input, target)
+class BCELoss(nn.BCELoss):
+    def __init__(self, size_average=None, reduce=None, reduction: str = 'mean') -> None:
+        if reduction=='batch_mean':
+            reduction='none'
+            self.batch_mean=True
+        super().__init__(size_average, reduce, reduction)
+    def forward(self, input, target):
+        if self.batch_mean:
+            return batch_mean(super().forward(input, target))
+        return super().forward(input, target)
+    
 class GANLoss(nn.Module):
     """Define different GAN objectives.
 
@@ -217,7 +262,7 @@ class GANLoss(nn.Module):
     that has the same size as the input.
     """
 
-    def __init__(self, gan_mode, target_real_label=1.0, target_fake_label=0.0):
+    def __init__(self, gan_mode, target_real_label=1.0, target_fake_label=0.0,reduction='mean'):
         """ Initialize the GANLoss class.
 
         Parameters:
@@ -232,10 +277,11 @@ class GANLoss(nn.Module):
         self.register_buffer('real_label', torch.tensor(target_real_label))
         self.register_buffer('fake_label', torch.tensor(target_fake_label))
         self.gan_mode = gan_mode
+        self.reduction=reduction
         if gan_mode == 'lsgan':
-            self.loss = nn.MSELoss()
+            self.loss = MSELoss(reduction=reduction)
         elif gan_mode == 'vanilla':
-            self.loss = nn.BCEWithLogitsLoss()
+            self.loss = BCELoss(reduction=reduction)
         elif gan_mode in ['wgangp']:
             self.loss = None
         else:
@@ -273,10 +319,10 @@ class GANLoss(nn.Module):
             loss = self.loss(prediction, target_tensor)
         elif self.gan_mode == 'wgangp':
             if target_is_real:
-                loss = -prediction.mean()
+                loss = -prediction
             else:
-                loss = prediction.mean()
-        return loss
+                loss = prediction
+        return reduce_loss( loss, self.reduction)
 
 
 def cal_gradient_penalty(netD, real_data, fake_data, device, type='mixed', constant=1.0, lambda_gp=10.0):
