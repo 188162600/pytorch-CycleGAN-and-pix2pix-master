@@ -87,15 +87,24 @@ class BoundaryAwareBatchSampler:
         self.datasets = datasets
         self.batch_size = batch_size
         self.shuffle = shuffle
+        self.enabled=[False]*len(datasets)
         # Initialize starting indices here if needed, or pass dynamically when calling _generate_batches
 
         self.batches = self._generate_batches()
         self.total_items = sum(len(batch) for batch in self.batches)
-
+    def enable(self,index,enable=True):
+        if self.enabled[index]==enable:
+            return
+        self.enabled[index]=enable
+        self.batches = self._generate_batches()
+        
     def _generate_batches(self):
         batches = []
         start_index = 0
-        for dataset in self.datasets:
+        for i,dataset in enumerate(self.datasets):
+            if not self.enabled[i]:
+                start_index+=len(dataset)
+                continue
 
             # Adjust the range to start from the given starting index, ensuring it does not exceed dataset length
             #start_index = max(0, min(start_index, len(dataset)))
@@ -145,16 +154,19 @@ class CustomDatasetDataLoader():
             self.datasets.append(dataset)
         self.dataset=ChainedDataset(self.datasets)
 
-        batch_sampler = BoundaryAwareBatchSampler(self.datasets, batch_size=opt.batch_size,shuffle=not opt.serial_batches)
+        self.batch_sampler = BoundaryAwareBatchSampler(self.datasets, batch_size=opt.batch_size,shuffle=not opt.serial_batches)
         #print(self.dataset,"dataset")
         self.dataloader = torch.utils.data.DataLoader(
             self.dataset,
-            batch_sampler=batch_sampler)
+            batch_sampler=self.batch_sampler)
+    def enable(self,index,enable=True):
+        self.batch_sampler.enable(index,enable)
     def update_info(self,index,info):
         self.datasets[index].info=info
     def load_data(self):
         
         return self
+    
 
     def __len__(self):
         """Return the number of data in the dataset"""

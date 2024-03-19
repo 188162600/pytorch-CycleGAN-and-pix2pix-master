@@ -55,13 +55,15 @@ if __name__ == '__main__':
         visualizer.reset()              # reset the visualizer: make sure it saves the results to HTML at least once every epoch
         model.update_learning_rate()    # update learning rates in the beginning of every epoch.
         print(opt.optimize_G_epoch,opt.optimize_C_epoch,opt.optimize_D_epoch)
-        for name,optimize_G_epoch,optimize_C_epoch,optimize_D_epoch in zip(opt.names,opt.optimize_G_epoch,opt.optimize_C_epoch,opt.optimize_D_epoch):
+        for name,optimize_G_epoch,optimize_C_epoch,optimize_D_epoch,index,data_load_epoch in zip(opt.names,opt.optimize_G_epoch,opt.optimize_C_epoch,opt.optimize_D_epoch,range(len(opt.names)),opt.data_load_epoch):
             if epoch>=optimize_G_epoch:
                 model.enable_optimizer_G(name)
             if epoch>=optimize_C_epoch:
                 model.enable_optimizer_C(name)
             if epoch>=optimize_D_epoch:
                 model.enable_optimizer_D(name)
+            if epoch>=data_load_epoch:
+                datasets.enable(index)
                 
                 
         dataset_size=len(datasets)

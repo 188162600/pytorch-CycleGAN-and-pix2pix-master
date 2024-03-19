@@ -50,4 +50,8 @@ class TrainOptions(BaseOptions):
             opt.optimize_D_epoch=opt.optimize_G_epoch
         if len(opt.optimize_C_epoch)==0:
             opt.optimize_C_epoch=opt.optimize_G_epoch
+        opt.data_load_epoch=[]
+        for a,b,c in zip(opt.optimize_G_epoch,opt.optimize_C_epoch,opt.optimize_D_epoch):
+            opt.data_load_epoch.append(min(a,b,c))
         return opt
+            
