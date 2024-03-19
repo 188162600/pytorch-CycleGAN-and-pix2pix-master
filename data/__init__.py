@@ -118,6 +118,7 @@ class BoundaryAwareBatchSampler:
             batches.extend(dataset_batches)
             start_index+=len(dataset)
             #print(start_index)
+        print("generate_batches",len(batches))
         return batches
 
     def __iter__(self):
