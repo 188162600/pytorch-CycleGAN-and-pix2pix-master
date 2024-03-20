@@ -6,6 +6,7 @@ from . import networks
 import meta.task
 import meta.section
 import meta.network
+import meta.next_steps
 
 class CycleGANModel(BaseModel):
     class Data:
@@ -115,13 +116,18 @@ class CycleGANModel(BaseModel):
         shape=(opt.input_nc,opt.crop_size,opt.crop_size)
         num_options=[opt.num_options_upsample,opt.num_options_blocks,opt.num_options_downsample]
         num_shared=[opt.num_shared_upsample,opt.num_shared_blocks,opt.num_shared_downsample]
+        next_steps_old_new_fresh_distribution=[opt.next_steps_old_weight,opt.next_steps_new_weight,opt.next_steps_fresh_weight]
+        
         self.generator_sections=meta.network.define_resnet_sections(num_options,num_shared,
                                                                      opt.input_nc,opt.output_nc,opt.ngf,opt.norm,not opt.no_dropout,8,"reflect",opt.init_type,opt.init_gain,self.gpu_ids)
         dummy_task=meta.task.Task(shape,self.device,[],self.opt.separate_classifier_backward)
         encoders=[opt.downsample_step_classifier_encoder,opt.blocks_step_classifier_encoder,opt.upsample_step_classifier_encoder]
         for i,section in enumerate( self.generator_sections):
             channels=dummy_task.dummy_features.size(1)
-            section.set_step_classifier_encoder(meta.network.define_resnet_encoder(encoders[i],input_channels=channels))
+            #print(dummy_task.dummy_features.shape,"dummy_task.dummy_features.shape","channels",channels)
+            section.classifier_encoder=meta.network.define_resnet_encoder(encoders[i],input_channels=channels)
+            #print("section.classifier_encoder",section.name,section.classifier_encoder)
+            section.steps_record=meta.next_steps.RestoredSteps(section.layers.num_layers_with_params,num_options[i],opt.num_tracking_samples,opt.next_steps_old_num_tracking,opt.next_steps_new_num_tracking,opt.next_steps_fresh_num_tracking,next_steps_old_new_fresh_distribution)
             dummy_task.append_section(section)
         
         self.all_data=dict()
@@ -156,8 +162,8 @@ class CycleGANModel(BaseModel):
                 # define loss functions
             
                 data.criterionGAN = networks.GANLoss(opt.gan_mode,reduction=reduction_mode).to(self.device)  # define GAN loss.
-                data.criterionCycle = networks.L1Loss(reduction=reduction_mode)    # define cycle loss
-                data.criterionIdt = networks.L1Loss(reduction=reduction_mode)
+                data.criterionCycle = networks.L1Loss(reduction=reduction_mode).to(self.device)    # define cycle loss
+                data.criterionIdt = networks.L1Loss(reduction=reduction_mode).to(self.device)
                 # initialize optimizers; schedulers will be automatically created by function <BaseModel.setup>.
                 #self.optimizer_G = torch.optim.Adam(itertools.chain(self.netG_A.parameters(), self.netG_B.parameters()), lr=opt.lr, betas=(opt.beta1, 0.999))
             

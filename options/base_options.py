@@ -33,6 +33,16 @@ class BaseOptions():
         parser.add_argument('--num_shared_upsample', type=int, default=0, help='# of options in each layer')
         parser.add_argument('--num_shared_downsample', type=int, default=0, help='# of options in each layer')
         parser.add_argument('--num_shared_blocks', type=int, default=4, help='# of options in each layer')
+        #[opt.next_steps_old_weight,opt.next_steps_new_weight,opt.next_steps_fresh_weight
+        #opt.num_tracking_samples,opt.next_steps_old_num_tracking,opt.next_steps_new_num_tracking,
+        parser.add_argument('--next_steps_old_num_tracking', type=int, default=32, help='number of tracking samples for old steps')
+        parser.add_argument('--next_steps_new_num_tracking', type=int, default=16, help='number of tracking samples for new steps')
+        parser.add_argument('--next_steps_fresh_num_tracking', type=int, default=10000, help='number of tracking samples for fresh steps')
+        
+        parser.add_argument('--next_steps_old_weight', type=float, default=0.3, help='weight of old steps')
+        parser.add_argument('--next_steps_new_weight', type=float, default=0.5, help='weight of new steps')
+        parser.add_argument('--next_steps_fresh_weight', type=float, default=0.2, help='weight of fresh steps')
+        parser.add_argument('--num_tracking_samples', type=int, default=4000)
         
         parser.add_argument('--downsample_step_classifier_encoder',type=str,default="resnet50")
         parser.add_argument('--upsample_step_classifier_encoder',type=str,default="resnet50")

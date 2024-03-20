@@ -4,7 +4,8 @@ from torch.nn import init
 import functools
 from torch.optim import lr_scheduler
 from meta.task import Task
-from meta.section import Section
+from meta.section import Section,SectionLayer
+from meta.next_steps import NextStepClassifier,RestoredSteps
 
 from meta.resnet_encoder import find_resnet_encoder
 from meta.conv2d import SelectiveConv2d,SelectiveConvTranspose2d
@@ -161,17 +162,19 @@ def define_resnet_generator(num_options_each_layer,input_nc, output_nc, ngf=64, 
     upsamples .extend_layers( [nn.Tanh()])
 def define_resnet_sections(num_options_each_layer,num_shared,input_nc, output_nc, ngf, norm, use_dropout=False, n_blocks=6, padding_type='reflect', init_type='normal', init_gain=0.02, gpu_ids=[]):
     assert len(num_options_each_layer)==3
-    print("num_options_each_layer",num_options_each_layer)
-    downsample_layers=[]
-    resnet_blocks=[]
-    upsample_layers=[]
-    downsample_section=Section("downsample",downsample_layers,num_options_each_layer[0])
-    resnet_section= Section("resnet",resnet_blocks,num_options_each_layer[1])
-    upsample_section= Section("upsample",upsample_layers,num_options_each_layer[2])
-    define_resnet_generator(num_options_each_layer,input_nc, output_nc, ngf, get_norm_layer(norm_type=norm) , use_dropout, n_blocks, padding_type,downsamples= downsample_section,blocks= resnet_section,upsamples=upsample_section,num_shared=num_shared)
-    sections= [downsample_section,resnet_section,upsample_section]
+    # print("num_options_each_layer",num_options_each_layer)
+   
+    downsample_section_layers=SectionLayer([],num_options_each_layer[0])
+    resnet_section_layers=SectionLayer([],num_options_each_layer[1])
+    upsample_section_layers=SectionLayer([],num_options_each_layer[2])
+    
+    define_resnet_generator(num_options_each_layer,input_nc, output_nc, ngf, get_norm_layer(norm_type=norm) , use_dropout, n_blocks, padding_type,downsamples= downsample_section_layers,blocks= resnet_section_layers,upsamples=upsample_section_layers,num_shared=num_shared)
+    
+    sections=[Section( "downsample",downsample_section_layers,None,None),
+             Section( "resnet",resnet_section_layers,None,None),
+             Section( "upsample",upsample_section_layers,None,None)]
     for section in sections:
-        for layer in section.base_layers:
+        for layer in section.layers.base_layers:
             init_net(layer, init_type, init_gain, gpu_ids)
     return sections
 

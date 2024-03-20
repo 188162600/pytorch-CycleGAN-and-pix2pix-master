@@ -254,6 +254,7 @@ class ResNetEncoder(nn.Module):
         return x
 
     def forward(self, x: Tensor) -> Tensor:
+        #print(self.conv1.weight.device)
         return self._forward_impl(x)
 
 def resnet18_encoder( **kwargs):

@@ -3,7 +3,7 @@ import torch
 from collections import OrderedDict
 from abc import ABC, abstractmethod
 from . import networks
-
+import itertools
 
 class BaseModel(ABC):
     """This class is an abstract base class (ABC) for models.
@@ -90,7 +90,7 @@ class BaseModel(ABC):
         for i,section in enumerate(self.generator_sections):
                 #print("section",section)
                 
-                optimizer_A=torch.optim.Adam(section.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
+                optimizer_A=torch.optim.Adam(section.layers.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
                 next_steps_classifier_optimizer_A=torch.optim.Adam(section.classifier.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
                 # optimizer_B=torch.optim.Adam(section.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
                 # next_steps_classifier_optimizer_B=torch.optim.Adam(section.classifier.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
@@ -108,17 +108,17 @@ class BaseModel(ABC):
                 self.optimizers.append(next_steps_classifier_optimizer_B)
                 # self.task_G_A.set_optimizer(i, optimizer_A,next_steps_classifier_optimizer_A)
                 # self.task_G_B.set_optimizer(i, optimizer_B,next_steps_classifier_optimizer_B)
-                section.to(self.device)
-                section.classifier.to(self.device)
-                #section.feature_adjustment.to(self.device)
-                section.classifier.encoder.to(self.device)
-                section.classifier.encoder.to(self.device)
-                for layers in section.layers:
-                    if isinstance(layers, list):
-                        for layer in layers:
-                            layer.to(self.device)
-                    else:
-                        layers.to(self.device)
+                # section.to(self.device)
+                # section.classifier.to(self.device)
+                # #section.feature_adjustment.to(self.device)
+                # section.classifier.encoder.to(self.device)
+                # section.classifier.encoder.to(self.device)
+                # for layers in section.layers:
+                #     if isinstance(layers, list):
+                #         for layer in layers:
+                #             layer.to(self.device)
+                #     else:
+                #         layers.to(self.device)
         if self.isTrain:
             self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
         if not self.isTrain or opt.continue_train:
@@ -235,7 +235,12 @@ class BaseModel(ABC):
                   
        
         return errors_ret
-
+    def update(self):
+        updated=set()
+        for name,data in self.all_data.items():
+            for task_name in self.task_names:
+                task=getattr(data, 'task_' + task_name)
+                task.update(updated)
     def save_networks(self, epoch):
         """Save all the networks to the disk.
 
