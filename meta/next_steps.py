@@ -284,18 +284,21 @@ class RestoredSteps:
         else:
             index_start=self.tracking_index
             index_end=self.tracking_index+batch
+            
             if index_end>=self.num_old+self.num_new+self.num_fresh:
                
                 index_start=self.num_old+self.num_new
                 index_start=index_start+batch
             self.tracking_index=index_end
-                
-            
-        self.losses[index_start:index_end]=loss
+        n=index_end-index_start
+        if loss.dim()==0:
+            self.losses[index_start:index_end]=loss
+        else:
+            self.losses[index_start:index_end]=loss[:n]
         
-        self.softmax[index_start:index_end]=next_steps.probability
-        self.indices[index_start:index_end]=next_steps.indices
-        self.losses[index_start:index_end]=loss
+        self.softmax[index_start:index_end]=next_steps.probability[:n]
+        self.indices[index_start:index_end]=next_steps.indices[:n]
+        # self.losses[index_start:index_end]=loss[:n]
         self.occurrences[index_start:index_end]+=1
        
         if next_steps.restored_step_index is None:
