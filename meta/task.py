@@ -123,6 +123,9 @@ class Task:
                 #print("features",section.features[0].shape)
                 last_features_shape=section.features[0].shape
                 last_features=section.features
+            else:
+                last_features=data
+                
             last_section_steps=section.next_steps
 
             self.results.append(data)

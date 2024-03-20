@@ -165,6 +165,7 @@ class Section(nn.Module):
         self.next_steps=next_steps
       
         layer_with_params_index=0
+        self.features=None
         #print("len",len(self.is_layer_with_params),self.num_total_layers)
         for i in range(self.num_total_layers):
             
