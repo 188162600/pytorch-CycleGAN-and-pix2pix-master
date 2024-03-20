@@ -176,7 +176,7 @@ class Section(nn.Module):
                 data=self.layers[i](data)
             if i==self.last_feature_index:
                 self.features=data.clone()
-            layer_with_params_index+=1
+            #layer_with_params_index+=1
                
          
         return data
