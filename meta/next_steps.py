@@ -296,7 +296,7 @@ class RestoredSteps:
         else:
             self.losses[index_start:index_end]=loss[:n]
         
-        self.softmax[index_start:index_end]=next_steps.probability[:n]
+        self.softmax[index_start:index_end]=next_steps.softmax[:n]
         self.indices[index_start:index_end]=next_steps.indices[:n]
         # self.losses[index_start:index_end]=loss[:n]
         self.occurrences[index_start:index_end]+=1
