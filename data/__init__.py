@@ -171,7 +171,12 @@ class CustomDatasetDataLoader():
 
     def __len__(self):
         """Return the number of data in the dataset"""
-        return min(len(self.dataset), self.opt.max_dataset_size)
+        length=0
+        for i,dataset in enumerate(self.datasets):
+            if not self.batch_sampler.enabled[i]:
+                continue
+            length+=len(dataset)
+        return min(length, self.opt.max_dataset_size)
 
     def __iter__(self):
         """Return a batch of data"""
