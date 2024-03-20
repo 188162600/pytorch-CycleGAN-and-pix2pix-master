@@ -194,6 +194,9 @@ class Task:
     #             classifier_loss=self.sections[i].get_steps_classifier_loss(loss.detach(),previous_steps[i])
     #             self._backward( classifier_loss)
     #             self.steps_classifier_optimizers[i].step()
+    def track(self,loss,previous_steps):
+        for i in range(len(self.sections)):
+            self.sections[i].track(loss,previous_steps[i])
     def optimize_steps_classifier2(self,loss,previous_steps):
         if self.separate_classifier_backward:
             for i in range(len(self.sections)):

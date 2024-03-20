@@ -469,18 +469,33 @@ class CycleGANModel(BaseModel):
         # self.losses_G=[loss_G_A+loss_G_B+loss_cycle_A+loss_cycle_B+idt_A_loss+idt_B_loss for loss_G_A,loss_G_B,loss_cycle_A,loss_cycle_B,idt_A_loss,idt_B_loss in zip(self.losses_G_A,self.losses_G_B,self.losses_cycle_A,self.losses_cycle_B,self.idt_A_losses,self.idt_B_losses)]
         # self.loss_G=self.losses_G[-1]
         data.loss_G=data.loss_G_A+data.loss_G_B+data.loss_cycle_A+data.loss_cycle_B+data.loss_idt_A+data.loss_idt_B
+        
+        
+        data.task_G_A.track(data.loss_G_A,data.fake_B_steps)
+        data.task_G_A.track(data.loss_cycle_A,data.rec_B_steps)
+        data.task_G_A.track(data.loss_idt_A,data.idt_A_steps)
+            
+        data.task_G_B.track(data.loss_G_B,data.fake_A_steps)
+        data.task_G_B.track(data.loss_cycle_A,data.rec_A_steps)
+        data.task_G_B.track(data.loss_idt_B,data.idt_B_steps)
+            
         if data.optimize_G:
             data.task_G_A.optimize_layers(data.loss_G)
         #self.task_G_B.optimize_layers2(self.loss_G)
+        
+        
         if data.optimize_C:
         
-            data.task_G_A.optimize_steps_classifier2(data.loss_G,data.fake_B_steps)
-            data.task_G_A.optimize_steps_classifier2(data.loss_G,data.rec_B_steps)
-            data.task_G_A.optimize_steps_classifier2(data.loss_G,data.idt_A_steps)
+            data.task_G_A.optimize_steps_classifier2(data.loss_G_A,data.fake_B_steps)
+            data.task_G_A.optimize_steps_classifier2(data.loss_cycle_A,data.rec_B_steps)
+            data.task_G_A.optimize_steps_classifier2(data.loss_idt_A,data.idt_A_steps)
             
-            data.task_G_B.optimize_steps_classifier2(data.loss_G,data.fake_A_steps)
-            data.task_G_B.optimize_steps_classifier2(data.loss_G,data.rec_A_steps)
-            data.task_G_B.optimize_steps_classifier2(data.loss_G,data.idt_B_steps)
+            data.task_G_B.optimize_steps_classifier2(data.loss_G_B,data.fake_A_steps)
+            data.task_G_B.optimize_steps_classifier2(data.loss_cycle_A,data.rec_A_steps)
+            data.task_G_B.optimize_steps_classifier2(data.loss_idt_B,data.idt_B_steps)
+           
+            
+            
         
         # self.task_G_A.optimize_parameters(self.losses_G_A,self.task_G_A.previous_steps)
         

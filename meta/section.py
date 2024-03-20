@@ -460,3 +460,5 @@ class Section:
         self.is_setup=True
     def update(self):
         self.steps_record.update()
+    def track(self,loss,step):
+        self.steps_record.track(loss,step)
