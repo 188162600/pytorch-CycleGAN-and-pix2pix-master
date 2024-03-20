@@ -291,11 +291,16 @@ class RestoredSteps:
                 index_start=index_start+batch
             self.tracking_index=index_end
         n=index_end-index_start
+        index=torch.arange(index_start, index_end)[:, None]
+        sample_index=self.num_sample[index_start:index_end]
+        # print(loss.shape,self.losses[index_start:index_end].shape)
+        # print("shape",self.losses[index_start:index_end].shape,self.losses[index_start:index_end][sample_index].shape,self.losses[index_start:index_end,sample_index].shape)
         if loss.dim()==0:
-            self.losses[index_start:index_end]=loss
+            
+            self.losses[index,sample_index]=loss
         else:
-            self.losses[index_start:index_end]=loss[:n]
-        
+            self.losses[index,sample_index]=loss[:n]
+        #print( self.softmax[index,sample_index].shape,next_steps.softmax[:n].shape)
         self.softmax[index_start:index_end]=next_steps.softmax[:n]
         self.indices[index_start:index_end]=next_steps.indices[:n]
         # self.losses[index_start:index_end]=loss[:n]
@@ -303,6 +308,7 @@ class RestoredSteps:
        
         if next_steps.restored_step_index is None:
             self.tracking_index+=batch
+        self.num_sample[index_start:index_end]+=1
             
     def reset_fresh(self):
         self.tracking_index=self.num_old+self.num_new
