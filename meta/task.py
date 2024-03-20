@@ -33,6 +33,8 @@ class Task:
         self.dummy_input=section.dummy_forward(self.dummy_input)
         if section.features is not None:
             self.dummy_features=section.features
+        else:
+            self.dummy_features=self.dummy_input
        
         self.optimizers.append(None)
         self.steps_classifier_optimizers.append(None)
@@ -100,7 +102,7 @@ class Task:
         #     hidden_short_term = previous.tensor
       
         self.previous_steps=[]
-        self.results=[]
+        #self.results=[]
         # last_features=torch.zeros(1,self.sections[0].input_features_size,device=self.device)
         last_features=data
         #print("last_features",last_features.device)
@@ -121,14 +123,14 @@ class Task:
             data=section.forward(data,  last_features  ,last_section_steps,self )
             if section.features is not None:
                 #print("features",section.features[0].shape)
-                last_features_shape=section.features[0].shape
+                
                 last_features=section.features
             else:
                 last_features=data
                 
             last_section_steps=section.next_steps
 
-            self.results.append(data)
+            #self.results.append(data)
             #print("len(self.sections),len(self.results)",len(self.sections),len(self.results))
             self.previous_steps.append(last_section_steps)
         return data
@@ -165,6 +167,7 @@ class Task:
         
             for i in range(len(self.sections)):
                 self.steps_classifier_optimizers[i].zero_grad()
+                #print(previous_steps)
                 confidence=0
                 for steps in previous_steps:
                 #for i in range(len(self.sections)):
