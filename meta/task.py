@@ -179,6 +179,13 @@ class Task:
                 #(loss.detach()*confidence).backward()
             #for i in range(len(self.sections)):
                 self.steps_classifier_optimizers[i].step()
+    def optimize_steps_classifier2(self,loss,previous_steps):
+        if self.separate_classifier_backward:
+            for i in range(len(self.sections)):
+                self.steps_classifier_optimizers[i].zero_grad()
+                classifier_loss=self.sections[i].get_steps_classifier_loss(loss.detach(),previous_steps[i])
+                self._backward( classifier_loss)
+                self.steps_classifier_optimizers[i].step()
             
     # def optimize_parameters(self,losses,previous_steps):
     #     for i in range(len(self.sections)):

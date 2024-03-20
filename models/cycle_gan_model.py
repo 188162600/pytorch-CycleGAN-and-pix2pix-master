@@ -273,6 +273,121 @@ class CycleGANModel(BaseModel):
         data.loss_D_B = self.backward_D_basic(data.netD_B, data.real_A, fake_A,data)
      
 
+    # def backward_G(self,data):
+    #     """Calculate the loss for generators G_A and G_B"""
+    #     lambda_idt = self.opt.lambda_identity
+    #     lambda_A = self.opt.lambda_A
+    #     lambda_B = self.opt.lambda_B
+    #     # Identity loss
+    #     # if lambda_idt > 0:
+    #     #     # G_A should be identity if real_B is fed: ||G_A(B) - B||
+    #     #     self.idt_A = self.netG_A(self.real_B)
+    #     #     self.loss_idt_A = self.criterionIdt(self.idt_A, self.real_B) * lambda_B * lambda_idt
+    #     #     # G_B should be identity if real_A is fed: ||G_B(A) - A||
+    #     #     self.idt_B = self.netG_B(self.real_A)
+    #     #     self.loss_idt_B = self.criterionIdt(self.idt_B, self.real_A) * lambda_A * lambda_idt
+    #     # else:
+    #     #     self.loss_idt_A = 0
+    #     #     self.loss_idt_B = 0
+    #     #classifier_loss=0
+    #     if lambda_idt > 0:
+    #         # G_A should be identity if real_B is fed: ||G_A(B) - B||
+    #         data.idt_A=data.task_G_A.forward(data.real_B)
+    #        # self.idt_A_each_section=self.task_G_A.get_results()
+            
+    #         #self.idt_A_losses=[self.criterionIdt(self.idt_A_each_section[i],self.real_B)*(lambda_B*lambda_idt) for i in range(len(self.idt_A_each_section))]
+    #         data.loss_idt_A= data.criterionIdt(data.idt_A,data.real_B)*(lambda_B*lambda_idt)
+    #         data.idt_A_steps=data.task_G_A.previous_steps
+            
+            
+    #         data.idt_B=data.task_G_B.forward(data.real_A)
+    #         # self.idt_B_each_section=self.task_G_B.get_results()
+    #         # self.idt_B_losses=[self.criterionIdt(self.idt_B_each_section[i],self.real_A)*(lambda_A*lambda_idt) for i in range(len(self.idt_B_each_section))]
+    #         # self.idt_B_loss=self.idt_B_losses[-1]
+    #         data.loss_idt_B= data.criterionIdt(data.idt_B,data.real_A)*(lambda_A*lambda_idt)
+    #         data.idt_B_steps=data.task_G_B.previous_steps
+    #         #print(data.real_B.shape,data.idt_A.shape)
+    #         #if self.opt.batch_size==1:
+    #         #classifier_loss=classifier_loss+data.loss_idt_A+data.loss_idt_B
+    #         # else:
+    #         #     with torch.no_grad():
+    #         #         classifier_loss=classifier_loss+data.criterionIdt(data.idt_A[0],data.real_B[0])*(lambda_B*lambda_idt)
+    #         #         classifier_loss=classifier_loss+data.criterionIdt(data.idt_B[0],data.real_A[0])*(lambda_A*lambda_idt)
+          
+    #     else:
+    #         data.loss_idt_A = 0
+    #         data.loss_idt_B = 0
+            
+        
+    #     # # GAN loss D_A(G_A(A))
+    #     # self.loss_G_A = self.criterionGAN(self.netD_A(self.fake_B), True)
+    #     # # GAN loss D_B(G_B(B))
+    #     # self.loss_G_B = self.criterionGAN(self.netD_B(self.fake_A), True)
+    #     # # Forward cycle loss || G_B(G_A(A)) - A||
+    #     # self.loss_cycle_A = self.criterionCycle(self.rec_A, self.real_A) * lambda_A
+    #     # # Backward cycle loss || G_A(G_B(B)) - B||
+    #     # self.loss_cycle_B = self.criterionCycle(self.rec_B, self.real_B) * lambda_B
+    #     # # combined loss and calculate gradients
+    #     # self.loss_G = self.loss_G_A + self.loss_G_B + self.loss_cycle_A + self.loss_cycle_B + self.loss_idt_A + self.loss_idt_B
+    #     # self.loss_G.backward()
+        
+    #     # # GAN loss D_A(G_A(A))
+    #     # self.losses_G_A=[self.criterionGAN(self.netD_A(fake_B_each_section),True) for fake_B_each_section in self.fake_B_each_section]
+    #     # self.loss_G_A=self.losses_G_A[-1]
+    #     data.loss_G_A=data.criterionGAN(data.netD_A(data.fake_B),True)
+        
+    #     # GAN loss D_B(G_B(B))
+    #     # self.losses_G_B=[self.criterionGAN(self.netD_B(fake_A_each_section),True) for fake_A_each_section in self.fake_A_each_section]
+    #     # self.loss_G_B=self.losses_G_B[-1]
+    #     data.loss_G_B=data.criterionGAN(data.netD_B(data.fake_A),True)
+    #     # Forward cycle loss || G_B(G_A(A)) - A||
+    #     # self.losses_cycle_A=[self.criterionCycle(rec_A_each_section,self.real_A) for rec_A_each_section in self.rec_A_each_section]
+    #     # self.loss_cycle_A=self.losses_cycle_A[-1]
+    #     data.loss_cycle_A=data.criterionCycle(data.rec_A,data.real_A)*lambda_A
+    #     # Backward cycle loss || G_A(G_B(B)) - B||
+    #     # self.losses_cycle_B=[self.criterionCycle(rec_B_each_section,self.real_B) for rec_B_each_section in self.rec_B_each_section]
+    #     # self.loss_cycle_B=self.losses_cycle_B[-1]
+    #     data.loss_cycle_B=data.criterionCycle(data.rec_B,data.real_B)*lambda_B
+    #     #if self.opt.batch_size==1:
+    #     # print(data.loss_cycle_A+data.loss_cycle_B+data.loss_idt_A+data.loss_idt_B,classifier_loss)
+    #     # classifier_loss=classifier_loss+data.loss_cycle_A+data.loss_cycle_B+data.loss_idt_A+data.loss_idt_B
+    #     # else:
+    #     #     with torch.no_grad():
+    #     #         classifier_loss=classifier_loss+self.loss_reduction_function(data.criterionGAN(data.netD_A(data.fake_B[0]),True))
+    #     #         classifier_loss=classifier_loss+self.loss_reduction_function(data.criterionGAN(data.netD_B(data.fake_A[0]),True))
+    #     #         classifier_loss=classifier_loss+self.loss_reduction_function(data.criterionCycle(data.rec_A[0],data.real_A[0])*lambda_A)
+    #     #         classifier_loss=classifier_loss+self.loss_reduction_function(data.criterionCycle(data.rec_B[0],data.real_B[0])*lambda_B)
+                
+            
+        
+        
+       
+    #     # self.losses_G=[loss_G_A+loss_G_B+loss_cycle_A+loss_cycle_B+idt_A_loss+idt_B_loss for loss_G_A,loss_G_B,loss_cycle_A,loss_cycle_B,idt_A_loss,idt_B_loss in zip(self.losses_G_A,self.losses_G_B,self.losses_cycle_A,self.losses_cycle_B,self.idt_A_losses,self.idt_B_losses)]
+    #     # self.loss_G=self.losses_G[-1]
+    #     data.loss_G=data.loss_G_A+data.loss_G_B+data.loss_cycle_A+data.loss_cycle_B+data.loss_idt_A+data.loss_idt_B
+    #     #print("loss_G",data.loss_G.shape)
+    #     if data.optimize_G:
+    #         data.task_G_A.optimize_layers(data.loss_G)
+    #     if data.optimize_C:
+    #         data.task_G_A.optimize_steps_classifiers(data.loss_G,[data.fake_B_steps,data.rec_B_steps,data.idt_A_steps,data.fake_A_steps,data.rec_A_steps,data.idt_B_steps])
+    #     #data.task_G_B.optimize_steps_classifiers(data.loss_G,[])
+    #     # #self.task_G_B.optimize_layers2(self.loss_G)
+        
+    #     # data.task_G_A.optimize_steps_classifier(data.loss_G,data.fake_B_steps)
+    #     # data.task_G_A.optimize_steps_classifier(data.loss_G,data.rec_B_steps)
+    #     # data.task_G_A.optimize_steps_classifier(data.loss_G,data.idt_A_steps)
+        
+    #     # data.task_G_B.optimize_steps_classifier(data.loss_G,data.fake_A_steps)
+       
+    
+        
+    #     # data.task_G_B.optimize_steps_classifier(data.loss_G,data.rec_A_steps)
+        
+    #     # data.task_G_B.optimize_steps_classifier(data.loss_G,data.idt_B_steps)
+        
+    #     # # self.task_G_A.optimize_parameters(self.losses_G_A,self.task_G_A.previous_steps)
+        
+     
     def backward_G(self,data):
         """Calculate the loss for generators G_A and G_B"""
         lambda_idt = self.opt.lambda_identity
@@ -289,14 +404,13 @@ class CycleGANModel(BaseModel):
         # else:
         #     self.loss_idt_A = 0
         #     self.loss_idt_B = 0
-        #classifier_loss=0
         if lambda_idt > 0:
             # G_A should be identity if real_B is fed: ||G_A(B) - B||
             data.idt_A=data.task_G_A.forward(data.real_B)
            # self.idt_A_each_section=self.task_G_A.get_results()
             
             #self.idt_A_losses=[self.criterionIdt(self.idt_A_each_section[i],self.real_B)*(lambda_B*lambda_idt) for i in range(len(self.idt_A_each_section))]
-            data.loss_idt_A= data.criterionIdt(data.idt_A,data.real_B)*(lambda_B*lambda_idt)
+            data.loss_idt_A=data.criterionIdt(data.idt_A,data.real_B)*(lambda_B*lambda_idt)
             data.idt_A_steps=data.task_G_A.previous_steps
             
             
@@ -304,15 +418,9 @@ class CycleGANModel(BaseModel):
             # self.idt_B_each_section=self.task_G_B.get_results()
             # self.idt_B_losses=[self.criterionIdt(self.idt_B_each_section[i],self.real_A)*(lambda_A*lambda_idt) for i in range(len(self.idt_B_each_section))]
             # self.idt_B_loss=self.idt_B_losses[-1]
-            data.loss_idt_B= data.criterionIdt(data.idt_B,data.real_A)*(lambda_A*lambda_idt)
+            data.loss_idt_B=data.criterionIdt(data.idt_B,data.real_A)*(lambda_A*lambda_idt)
             data.idt_B_steps=data.task_G_B.previous_steps
-            #print(data.real_B.shape,data.idt_A.shape)
-            #if self.opt.batch_size==1:
-            #classifier_loss=classifier_loss+data.loss_idt_A+data.loss_idt_B
-            # else:
-            #     with torch.no_grad():
-            #         classifier_loss=classifier_loss+data.criterionIdt(data.idt_A[0],data.real_B[0])*(lambda_B*lambda_idt)
-            #         classifier_loss=classifier_loss+data.criterionIdt(data.idt_B[0],data.real_A[0])*(lambda_A*lambda_idt)
+  
           
         else:
             data.loss_idt_A = 0
@@ -348,44 +456,27 @@ class CycleGANModel(BaseModel):
         # self.losses_cycle_B=[self.criterionCycle(rec_B_each_section,self.real_B) for rec_B_each_section in self.rec_B_each_section]
         # self.loss_cycle_B=self.losses_cycle_B[-1]
         data.loss_cycle_B=data.criterionCycle(data.rec_B,data.real_B)*lambda_B
-        #if self.opt.batch_size==1:
-        # print(data.loss_cycle_A+data.loss_cycle_B+data.loss_idt_A+data.loss_idt_B,classifier_loss)
-        # classifier_loss=classifier_loss+data.loss_cycle_A+data.loss_cycle_B+data.loss_idt_A+data.loss_idt_B
-        # else:
-        #     with torch.no_grad():
-        #         classifier_loss=classifier_loss+self.loss_reduction_function(data.criterionGAN(data.netD_A(data.fake_B[0]),True))
-        #         classifier_loss=classifier_loss+self.loss_reduction_function(data.criterionGAN(data.netD_B(data.fake_A[0]),True))
-        #         classifier_loss=classifier_loss+self.loss_reduction_function(data.criterionCycle(data.rec_A[0],data.real_A[0])*lambda_A)
-        #         classifier_loss=classifier_loss+self.loss_reduction_function(data.criterionCycle(data.rec_B[0],data.real_B[0])*lambda_B)
-                
-            
+      
         
         
        
         # self.losses_G=[loss_G_A+loss_G_B+loss_cycle_A+loss_cycle_B+idt_A_loss+idt_B_loss for loss_G_A,loss_G_B,loss_cycle_A,loss_cycle_B,idt_A_loss,idt_B_loss in zip(self.losses_G_A,self.losses_G_B,self.losses_cycle_A,self.losses_cycle_B,self.idt_A_losses,self.idt_B_losses)]
         # self.loss_G=self.losses_G[-1]
         data.loss_G=data.loss_G_A+data.loss_G_B+data.loss_cycle_A+data.loss_cycle_B+data.loss_idt_A+data.loss_idt_B
-        #print("loss_G",data.loss_G.shape)
         if data.optimize_G:
             data.task_G_A.optimize_layers(data.loss_G)
+        #self.task_G_B.optimize_layers2(self.loss_G)
         if data.optimize_C:
-            data.task_G_A.optimize_steps_classifiers(data.loss_G,[data.fake_B_steps,data.rec_B_steps,data.idt_A_steps,data.fake_A_steps,data.rec_A_steps,data.idt_B_steps])
-        #data.task_G_B.optimize_steps_classifiers(data.loss_G,[])
-        # #self.task_G_B.optimize_layers2(self.loss_G)
         
-        # data.task_G_A.optimize_steps_classifier(data.loss_G,data.fake_B_steps)
-        # data.task_G_A.optimize_steps_classifier(data.loss_G,data.rec_B_steps)
-        # data.task_G_A.optimize_steps_classifier(data.loss_G,data.idt_A_steps)
+            data.task_G_A.optimize_steps_classifier2(data.loss_G,data.fake_B_steps)
+            data.task_G_A.optimize_steps_classifier2(data.loss_G,data.rec_B_steps)
+            data.task_G_A.optimize_steps_classifier2(data.loss_G,data.idt_A_steps)
+            
+            data.task_G_B.optimize_steps_classifier2(data.loss_G,data.fake_A_steps)
+            data.task_G_B.optimize_steps_classifier2(data.loss_G,data.rec_A_steps)
+            data.task_G_B.optimize_steps_classifier2(data.loss_G,data.idt_B_steps)
         
-        # data.task_G_B.optimize_steps_classifier(data.loss_G,data.fake_A_steps)
-       
-    
-        
-        # data.task_G_B.optimize_steps_classifier(data.loss_G,data.rec_A_steps)
-        
-        # data.task_G_B.optimize_steps_classifier(data.loss_G,data.idt_B_steps)
-        
-        # # self.task_G_A.optimize_parameters(self.losses_G_A,self.task_G_A.previous_steps)
+        # self.task_G_A.optimize_parameters(self.losses_G_A,self.task_G_A.previous_steps)
         
      
 

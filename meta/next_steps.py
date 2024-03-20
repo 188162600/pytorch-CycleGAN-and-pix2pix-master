@@ -344,7 +344,7 @@ class NextStepClassifier(nn.Module):
             hx=hx.unsqueeze(0)
             hx=torch.nn.functional.interpolate(hx,(self.num_step_classes,self.num_next_steps ,))
             #print("interpolated",hx.shape)
-            hx=hx[0]
+            #hx=hx[0]
         hx=hx.view(batch,-1)
       
         cx = hidden_long_term
@@ -360,12 +360,11 @@ class NextStepClassifier(nn.Module):
             #print("forward2 result", net, features.shape, hx.shape, cx.shape)
         #result=torch.cat(result,dim=1)
       
-        result=hx 
-        result=result.view(batch, self.num_step_classes, self.num_next_steps)
-        
+        hx=hx.view(batch, self.num_step_classes, self.num_next_steps)
         task.hidden_long_term[self] = cx.detach()
+
         #print("result",result.shape)
-        return NextSteps(result)
+        return NextSteps(hx)
 
 # class NextStepClassifier(nn.Module):
 #     def __init__(self, in_features_shape, num_next_steps, num_step_classes,num_picking_classes,encoder):

@@ -97,6 +97,7 @@ class BoundaryAwareBatchSampler:
             return
         self.enabled[index]=enable
         self.batches = self._generate_batches()
+        self.total_items = sum(len(batch) for batch in self.batches)
         
     def _generate_batches(self):
         batches = []
@@ -171,12 +172,7 @@ class CustomDatasetDataLoader():
 
     def __len__(self):
         """Return the number of data in the dataset"""
-        length=0
-        for i,dataset in enumerate(self.datasets):
-            if not self.batch_sampler.enabled[i]:
-                continue
-            length+=len(dataset)
-        return min(length, self.opt.max_dataset_size)
+        return self.dataloader.batch_sampler.total_items
 
     def __iter__(self):
         """Return a batch of data"""
