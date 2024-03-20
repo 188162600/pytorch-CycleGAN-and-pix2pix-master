@@ -112,10 +112,10 @@ class Task:
             #data=data.detach()
             if self.separate_classifier_backward:
                 if last_section_steps is not None:
-                    last_section_steps.tensor=last_section_steps.tensor.detach()
+                    last_section_steps.tensor=last_section_steps.tensor.clone().detach()
                 
                 if last_features is not None:
-                    last_features=last_features.detach()
+                    last_features=last_features.clone().detach()
                 
             #print("task forward last_features",last_features.device)
             data=section.forward(data,  last_features  ,last_section_steps,self )
