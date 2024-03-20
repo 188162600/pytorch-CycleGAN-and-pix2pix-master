@@ -204,7 +204,7 @@ class ResnetBlock(nn.Module):
         else:
             self.dropout1=torch.nn.Identity()
         self.norm_layer1=norm_layer(dim)
-        self.relu1=nn.ReLU(False)
+        self.relu1=nn.ReLU(True)
         self.conv2=SelectiveConv2d(dim, dim, kernel_size=3, padding=p, bias=use_bias,groups=num_options_each_layer)
         self.norm_layer2=norm_layer(dim)
         
