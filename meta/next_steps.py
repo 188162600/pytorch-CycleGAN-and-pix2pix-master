@@ -210,7 +210,8 @@ class RestoredSteps:
         self.old_new_fresh_distribution=old_new_fresh_distribution
         
         
-        self.num_sample=torch.zeros(num_old+num_new+num_fresh,dtype=torch.long)
+        self.current_sample=torch.zeros(num_old+num_new+num_fresh,dtype=torch.long)
+        self.num_samples=num_samples
         self.tracking_index=num_new+num_old
         
          
@@ -224,7 +225,7 @@ class RestoredSteps:
         self.indices=self.indices.to(*args,**kwargs)
         self.losses=self.losses.to(*args,**kwargs)
         self.occurrences=self.occurrences.to(*args,**kwargs)
-        self.num_sample=self.num_sample.to(*args,**kwargs)
+        self.current_sample=self.current_sample.to(*args,**kwargs)
         return self
     
     def aggregate_losses(self):
@@ -238,7 +239,7 @@ class RestoredSteps:
             idx = (indices == i)
             # Select the corresponding losses and sample counts
             occ_losses = self.losses[idx]
-            occ_samples = self.num_sample[idx]
+            occ_samples = self.current_sample[idx]
 
             # Aggregate losses by calculating the mean for each occurrence
             total_loss = 0
@@ -268,7 +269,7 @@ class RestoredSteps:
         return interp_val
     def get_losses(self):
         sum_loss=self.losses.sum(dim=1)
-        return sum_loss/self.num_sample
+        return sum_loss/self.current_sample
     def get_efficiency(self):
         expected_loss=self.linear_interp_loss(self.occurrences)
         diff= expected_loss-self.get_losses()
@@ -281,7 +282,10 @@ class RestoredSteps:
         if next_steps.restored_step_index is not None:
             index_start=next_steps.restored_step_index
             index_end=(next_steps.restored_step_index+batch)%(self.num_old+self.num_new)
+            index=next_steps.restored_step_index
+            
         else:
+            next_steps.indices
             index_start=self.tracking_index
             index_end=self.tracking_index+batch
             
@@ -290,9 +294,11 @@ class RestoredSteps:
                 index_start=self.num_old+self.num_new
                 index_start=index_start+batch
             self.tracking_index=index_end
-        n=index_end-index_start
-        index=torch.arange(index_start, index_end)[:, None]
-        sample_index=self.num_sample[index_start:index_end]
+            index=torch.arange(index_start, index_end)
+        print("index",index.shape)
+        n=index.size(0)
+      
+        sample_index=self.current_sample[index]
         # print(loss.shape,self.losses[index_start:index_end].shape)
         # print("shape",self.losses[index_start:index_end].shape,self.losses[index_start:index_end][sample_index].shape,self.losses[index_start:index_end,sample_index].shape)
         if loss.dim()==0:
@@ -301,19 +307,18 @@ class RestoredSteps:
         else:
             self.losses[index,sample_index]=loss[:n]
         #print( self.softmax[index,sample_index].shape,next_steps.softmax[:n].shape)
-        self.softmax[index_start:index_end]=next_steps.softmax[:n]
-        self.indices[index_start:index_end]=next_steps.indices[:n]
+        self.softmax[index]=next_steps.softmax[:n]
+        self.indices[index]=next_steps.indices[:n]
         # self.losses[index_start:index_end]=loss[:n]
-        self.occurrences[index_start:index_end]+=1
+        self.occurrences[index]+=1
        
-        if next_steps.restored_step_index is None:
-            self.tracking_index+=batch
-        self.num_sample[index_start:index_end]+=1
+       
+        self.current_sample[index]=(self.current_sample[index]+1)%self.num_samples
             
     def reset_fresh(self):
         self.tracking_index=self.num_old+self.num_new
         self.occurrences[self.num_new+self.num_old:]=0
-        self.num_sample[self.num_new+self.num_old:]=0
+        self.current_sample[self.num_new+self.num_old:]=0
         self.losses[self.num_new+self.num_old:]=math.inf
     
        
@@ -337,7 +342,7 @@ class RestoredSteps:
         self.indices[self.num_old+self.num_new]=self.indices[sorted_indices_by_occurrences]
         self.losses[self.num_old+self.num_new]=self.losses[sorted_indices_by_occurrences]
         self.occurrences[self.num_old+self.num_new]=self.occurrences[sorted_indices_by_occurrences]
-        self.num_sample[self.num_old+self.num_new]=self.num_sample[sorted_indices_by_occurrences]
+        self.current_sample[self.num_old+self.num_new]=self.current_sample[sorted_indices_by_occurrences]
         self.reset_fresh()
         
         
