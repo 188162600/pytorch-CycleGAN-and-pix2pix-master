@@ -227,7 +227,7 @@ class RestoredSteps:
         self.occurrences=self.occurrences.to(*args,**kwargs)
         self.current_sample=self.current_sample.to(*args,**kwargs)
         return self
-    
+    @torch.no_grad()
     def aggregate_losses(self):
         # Unique occurrences
         unique_occurrences, indices = torch.unique(self.occurrences, return_inverse=True)
@@ -254,7 +254,7 @@ class RestoredSteps:
             #     aggregated_losses[i]=math.inf
 
         return unique_occurrences.float(), aggregated_losses
-
+    @torch.no_grad()
     def linear_interp_loss(self, occurrence):
         # Assuming torch_linear_interp is defined as before
         occurrences, aggregated_losses = self.aggregate_losses()
@@ -267,16 +267,18 @@ class RestoredSteps:
         # Interpolate
         interp_val = linear_interp(occurrence, sorted_occurrences, sorted_losses)
         return interp_val
+    @torch.no_grad()
     def get_losses(self):
         sum_loss=self.losses.sum(dim=1)
         return sum_loss/self.current_sample
+    @torch.no_grad()
     def get_efficiency(self):
         expected_loss=self.linear_interp_loss(self.occurrences)
         diff= expected_loss-self.get_losses()
         return diff
         
  
-        
+    @torch.no_grad()
     def track(self,loss,next_steps:NextSteps):
         #print("loss",loss)
         batch=next_steps.tensor.size(0)
@@ -316,7 +318,7 @@ class RestoredSteps:
        
        
         self.current_sample[index]=(self.current_sample[index]+1)%self.num_samples
-            
+    @torch.no_grad()
     def reset_fresh(self):
         self.tracking_index=self.num_old+self.num_new
         self.occurrences[self.num_new+self.num_old:]=0
@@ -324,7 +326,7 @@ class RestoredSteps:
         self.losses[self.num_new+self.num_old:]=math.inf
     
        
-        
+    @torch.no_grad()
     def update(self):
         # indices=torch.argsort(self.get_efficiency(),descending=True)[self.num_old+self.num_new:]
         # indices=torch.argsort(self.occurrences[indices],descending=True)
