@@ -301,12 +301,12 @@ class CycleGANModel(BaseModel):
         # # GAN loss D_A(G_A(A))
         # self.losses_G_A=[self.criterionGAN(self.netD_A(fake_B_each_section),True) for fake_B_each_section in self.fake_B_each_section]
         # self.loss_G_A=self.losses_G_A[-1]
-        self.loss_G_A=self.criterionGAN(self.netD_A(self.fake_B),True)
+        self.loss_G_A=self.criterionGAN(self.netD_A(self.fake_B),True)*self.loss_D_A
         
         # GAN loss D_B(G_B(B))
         # self.losses_G_B=[self.criterionGAN(self.netD_B(fake_A_each_section),True) for fake_A_each_section in self.fake_A_each_section]
         # self.loss_G_B=self.losses_G_B[-1]
-        self.loss_G_B=self.criterionGAN(self.netD_B(self.fake_A),True)
+        self.loss_G_B=self.criterionGAN(self.netD_B(self.fake_A),True)*self.loss_D_B
         # Forward cycle loss || G_B(G_A(A)) - A||
         # self.losses_cycle_A=[self.criterionCycle(rec_A_each_section,self.real_A) for rec_A_each_section in self.rec_A_each_section]
         # self.loss_cycle_A=self.losses_cycle_A[-1]
