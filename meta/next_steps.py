@@ -287,11 +287,12 @@ class RestoredSteps:
         else:
             next_steps.indices
             index_start=self.tracking_index
+            index_end=index_start+batch
             if index_end>=self.num_old+self.num_new+self.num_fresh:
                
                 index_start=self.num_old+self.num_new
                 print("tracking resetting to start")
-            index_end=index_start+batch
+                index_end=index_start+batch
             self.tracking_index=index_end
             index=torch.arange(index_start, index_end)
         #print("index",index.shape)
