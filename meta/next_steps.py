@@ -352,10 +352,10 @@ class RestoredSteps:
        
         softmax=self.softmax[self.num_old:self.num_old+self.num_new].view(self.num_new,-1)
         next_steps_softmax=next_steps.softmax.view(next_steps.softmax.size(0),-1)
-      
-        similarity=cosine_similarity_2d(softmax,next_steps_softmax)
-       
-        index=torch.argmax(similarity,dim=0)
+        with torch.no_grad():
+            similarity=cosine_similarity_2d(softmax,next_steps_softmax)
+        
+            index=torch.argmax(similarity,dim=0)
 
        
         confidence=torch.gather(similarity,0,index.unsqueeze(0)).squeeze(0) *next_steps.confidence
@@ -368,10 +368,11 @@ class RestoredSteps:
         #print("self.softmax.shape,next_steps.softmax.shape",self.softmax.shape,next_steps.softmax.shape)
         softmax=self.softmax[:self.num_old].view(self.num_old,-1)
         next_steps_softmax=next_steps.softmax.view(next_steps.softmax.size(0),-1)
+        with torch.no_grad():
+            similarity=cosine_similarity_2d(softmax,next_steps_softmax)
         
-        similarity=cosine_similarity_2d(softmax,next_steps_softmax)
+            index=torch.argmax(similarity,dim=0)
         
-        index=torch.argmax(similarity,dim=0)
         
         confidence=torch.gather(similarity ,0,index.unsqueeze(0)).squeeze(0)*next_steps.confidence
         # print("softmax--",self.softmax[index].shape,next_steps.softmax.shape)
@@ -382,10 +383,10 @@ class RestoredSteps:
         return next_steps
     def get_random(self, next_steps):
         weight=list(self.old_new_fresh_distribution)
-        # if self.losses[0][0].item() == math.inf:
-        #     weight[0]=0
-        # if self.losses[self.num_old][0].item() == math.inf:
-        #     weight[1]=0
+        if self.losses[0][0].item() == math.inf:
+            weight[0]=0
+        if self.losses[self.num_old][0].item() == math.inf:
+            weight[1]=0
         which=random.choices((self.get_old,self.get_new,self.get_fresh),weights=weight,k=1)[0]
         return which(next_steps)
         
