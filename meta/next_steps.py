@@ -326,7 +326,9 @@ class RestoredSteps:
     def update(self):
         # indices=torch.argsort(self.get_efficiency(),descending=True)[self.num_old+self.num_new:]
         # indices=torch.argsort(self.occurrences[indices],descending=True)
-        sorted_indices_by_efficiency = torch.argsort(self.get_efficiency(), descending=True)
+        efficiency=self.get_efficiency()
+        efficiency[:self.num_old]=math.inf
+        sorted_indices_by_efficiency = torch.argsort(efficiency, descending=True)
 
         # Select the subset of items, skipping the top self.num_old+self.num_new items.
         subset_indices = sorted_indices_by_efficiency[self.num_old+self.num_new:]
