@@ -339,7 +339,7 @@ class CycleGANModel(BaseModel):
         
     #     # # GAN loss D_A(G_A(A))
     #     # self.losses_G_A=[self.criterionGAN(self.netD_A(fake_B_each_section),True) for fake_B_each_section in self.fake_B_each_section]
-    #     # self.loss_G_A=self.losses_G_A[-1]
+    #     # self.loss_G_A=self.losses_G_A[-1]f
     #     data.loss_G_A=data.criterionGAN(data.netD_A(data.fake_B),True)
         
     #     # GAN loss D_B(G_B(B))

@@ -278,7 +278,7 @@ class RestoredSteps:
  
         
     def track(self,loss,next_steps:NextSteps):
-        print("loss",loss)
+        #print("loss",loss)
         batch=next_steps.tensor.size(0)
         if next_steps.restored_step_index is not None:
             # index_start=next_steps.restored_step_index
