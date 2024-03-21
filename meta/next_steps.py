@@ -287,12 +287,10 @@ class RestoredSteps:
         else:
             next_steps.indices
             index_start=self.tracking_index
-            index_end=self.tracking_index+batch
-            
             if index_end>=self.num_old+self.num_new+self.num_fresh:
                
                 index_start=self.num_old+self.num_new
-                index_start=index_start+batch
+            index_end=index_start+batch
             self.tracking_index=index_end
             index=torch.arange(index_start, index_end)
         #print("index",index.shape)
@@ -303,9 +301,9 @@ class RestoredSteps:
         # print("shape",self.losses[index_start:index_end].shape,self.losses[index_start:index_end][sample_index].shape,self.losses[index_start:index_end,sample_index].shape)
         if loss.dim()==0:
             
-            self.losses[index,sample_index]=loss
+            self.losses[index[:,None] ,sample_index]=loss
         else:
-            self.losses[index,sample_index]=loss[:n]
+            self.losses[index[:,None],sample_index]=loss[:n]
         #print( self.softmax[index,sample_index].shape,next_steps.softmax[:n].shape)
         self.softmax[index]=next_steps.softmax[:n]
         self.indices[index]=next_steps.indices[:n]
@@ -382,10 +380,10 @@ class RestoredSteps:
         return next_steps
     def get_random(self, next_steps):
         weight=list(self.old_new_fresh_distribution)
-        if self.losses[0][0].item() == math.inf:
-            weight[0]=0
-        if self.losses[self.num_old][0].item() == math.inf:
-            weight[1]=0
+        # if self.losses[0][0].item() == math.inf:
+        #     weight[0]=0
+        # if self.losses[self.num_old][0].item() == math.inf:
+        #     weight[1]=0
         which=random.choices((self.get_old,self.get_new,self.get_fresh),weights=weight,k=1)[0]
         return which(next_steps)
         
