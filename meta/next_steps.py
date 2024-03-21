@@ -383,6 +383,7 @@ class RestoredSteps:
         return next_steps
     def get_random(self, next_steps):
         weight=list(self.old_new_fresh_distribution)
+        #print(self.losses[0][0].item() ,self.losses[self.num_old][0].item() == math.inf)
         if self.losses[0][0].item() == math.inf:
             weight[0]=0
         if self.losses[self.num_old][0].item() == math.inf:
