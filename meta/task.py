@@ -112,7 +112,7 @@ class Task:
         self.previous_steps=[]
         #self.results=[]
         # last_features=torch.zeros(1,self.sections[0].input_features_size,device=self.device)
-        last_features=data
+        last_features=data.clone()
         #print("last_features",last_features.device)
         last_section_steps=None
         #print("len(self.sections)",len(self.sections))
@@ -125,7 +125,7 @@ class Task:
                 #     last_section_steps.tensor=last_section_steps.tensor.clone().detach()
                 
                 if last_features is not None:
-                    last_features=last_features.clone().detach()
+                    last_features=last_features.detach()
                 
             #print("task forward last_features",last_features.device)
             data,last_features,last_section_steps=section.forward(data,  last_features  ,last_section_steps,self )
