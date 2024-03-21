@@ -278,6 +278,7 @@ class RestoredSteps:
  
         
     def track(self,loss,next_steps:NextSteps):
+        print("loss",loss)
         batch=next_steps.tensor.size(0)
         if next_steps.restored_step_index is not None:
             # index_start=next_steps.restored_step_index
@@ -288,10 +289,11 @@ class RestoredSteps:
             next_steps.indices
             index_start=self.tracking_index
             index_end=index_start+batch
+            #print(index_end)
             if index_end>=self.num_old+self.num_new+self.num_fresh:
                
                 index_start=self.num_old+self.num_new
-                print("tracking resetting to start")
+                #print("tracking resetting to start")
                 index_end=index_start+batch
             self.tracking_index=index_end
             index=torch.arange(index_start, index_end)
