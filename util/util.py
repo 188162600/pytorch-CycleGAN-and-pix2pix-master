@@ -136,4 +136,4 @@ def cosine_similarity_2d(x:torch.Tensor, y:torch.Tensor):
     # Resulting shape is [16, 2]
     return  torch.mm(x_norm, y_norm.transpose(0, 1))
 def confidence_loss(probability,loss):
-    return torch.nn.functional.sigmoid(probability*2)*loss*1.4
+    return (probability/1.7+0.7)*loss
