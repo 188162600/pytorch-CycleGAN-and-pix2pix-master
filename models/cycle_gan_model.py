@@ -29,9 +29,23 @@ class CycleGANModel(BaseModel):
             self.loss_G_B=0
             self.loss_cycle_B=0
             self.loss_idt_B=0
+            self.loss_G=0
             self.optimize_D=False
             self.optimize_C=False
             self.optimize_G=False
+        def detach(self):
+            self.loss_D_A=self.loss_D_A.detach()
+            self.loss_G_A=self.loss_G_A.detach()
+            self.loss_cycle_A=self.loss_cycle_A.detach()
+            self.loss_idt_A=self.loss_idt_A.detach()
+            self.loss_D_B=self.loss_D_B.detach()
+            self.loss_G_B=self.loss_G_B.detach()
+            self.loss_cycle_B=self.loss_cycle_B.detach()
+            self.loss_idt_B=self.loss_idt_B.detach()
+            self.loss_G=self.loss_G.detach()
+    
+            
+            
          
     def enable_optimizer_D(self,name,enable=True):
         self.all_data[name].optimize_D=enable
@@ -495,7 +509,7 @@ class CycleGANModel(BaseModel):
             data.task_G_B.optimize_steps_classifier2(data.loss_idt_B,data.idt_B_steps)
            
             
-            
+        
         
         # self.task_G_A.optimize_parameters(self.losses_G_A,self.task_G_A.previous_steps)
         
@@ -524,3 +538,4 @@ class CycleGANModel(BaseModel):
             self.backward_D_A(data)      # calculate gradients for D_A
             self.backward_D_B(data)      # calculate graidents for D_B
             data.optimizer_D.step()  # update D_A and D_B's weights
+        data.detach()
