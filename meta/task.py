@@ -3,6 +3,7 @@ import torch
 import os
 from meta.section import Section
 from meta.next_steps import NextSteps
+from util.util import confidence_loss
 # from torchviz import make_dot
 
 
@@ -203,7 +204,8 @@ class Task:
             for i in range(len(self.sections)):
                 self.steps_classifier_optimizers[i].zero_grad()
             #print("previous_steps[-1].confidence.shape,loss.detach().shape",previous_steps[-1].confidence.shape,loss.detach().shape)
-            classifier_loss=previous_steps[-1].confidence*(loss.detach())
+            classifier_loss=confidence_loss(previous_steps[-1].confidence,loss.detach())
+            #previous_steps[-1].confidence*(loss.detach())
                 
             self._backward( classifier_loss)
             for i in range(len(self.sections)):
