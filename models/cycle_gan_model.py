@@ -34,24 +34,34 @@ class CycleGANModel(BaseModel):
             self.optimize_C=False
             self.optimize_G=False
         def detach(self):
-            if self.loss_D_A.grad_fn is not None:
-                self.loss_D_A=self.loss_D_A.detach()
-            if self.loss_G_A.grad_fn is not None:
-                self.loss_G_A=self.loss_G_A.detach()
-            if self.loss_cycle_A.grad_fn is not None:
-                self.loss_cycle_A=self.loss_cycle_A.detach()
-            if self.loss_idt_A.grad_fn is not None:
-                self.loss_idt_A=self.loss_idt_A.detach()
-            if self.loss_D_B.grad_fn is not None:
-                self.loss_D_B=self.loss_D_B.detach()
-            if self.loss_G_B.grad_fn is not None:
-                self.loss_G_B=self.loss_G_B.detach()
-            if self.loss_cycle_B.grad_fn is not None:
-                self.loss_cycle_B=self.loss_cycle_B.detach()
-            if self.loss_idt_B.grad_fn is not None:
-                self.loss_idt_B=self.loss_idt_B.detach()
-            if self.loss_G.grad_fn is not None:
-                self.loss_G=self.loss_G.detach()
+            self.loss_D_A.grad_fn=None
+            self.loss_G_A.grad_fn=None
+            self.loss_cycle_A.grad_fn=None
+            self.loss_idt_A.grad_fn=None
+            self.loss_D_B.grad_fn=None
+            self.loss_G_B.grad_fn=None
+            self.loss_cycle_B.grad_fn=None
+            self.loss_idt_B.grad_fn=None
+            self.loss_G.grad_fn=None
+                
+            # if self.loss_D_A.grad_fn is not None:
+            #     self.loss_D_A=self.loss_D_A.detach()
+            # if self.loss_G_A.grad_fn is not None:
+            #     self.loss_G_A=self.loss_G_A.detach()
+            # if self.loss_cycle_A.grad_fn is not None:
+            #     self.loss_cycle_A=self.loss_cycle_A.detach()
+            # if self.loss_idt_A.grad_fn is not None:
+            #     self.loss_idt_A=self.loss_idt_A.detach()
+            # if self.loss_D_B.grad_fn is not None:
+            #     self.loss_D_B=self.loss_D_B.detach()
+            # if self.loss_G_B.grad_fn is not None:
+            #     self.loss_G_B=self.loss_G_B.detach()
+            # if self.loss_cycle_B.grad_fn is not None:
+            #     self.loss_cycle_B=self.loss_cycle_B.detach()
+            # if self.loss_idt_B.grad_fn is not None:
+            #     self.loss_idt_B=self.loss_idt_B.detach()
+            # if self.loss_G.grad_fn is not None:
+            #     self.loss_G=self.loss_G.detach()
             
             # self.loss_G_A=self.loss_G_A.detach()
             # self.loss_cycle_A=self.loss_cycle_A.detach()
