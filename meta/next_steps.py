@@ -272,10 +272,11 @@ class RestoredSteps:
         sum_loss=self.losses.sum(dim=1)
         return sum_loss/self.current_sample
     @torch.no_grad()
-    def get_efficiency(self):
+    def get_efficiency_and_loss(self):
         expected_loss=self.linear_interp_loss(self.occurrences)
-        diff= expected_loss-self.get_losses()
-        return diff
+        loss=self.get_losses()
+        diff= expected_loss-loss
+        return diff,loss
         
  
     @torch.no_grad()
@@ -330,7 +331,7 @@ class RestoredSteps:
     def update(self):
         # indices=torch.argsort(self.get_efficiency(),descending=True)[self.num_old+self.num_new:]
         # indices=torch.argsort(self.occurrences[indices],descending=True)
-        efficiency=self.get_efficiency()
+        efficiency,loss=self.get_efficiency_and_loss()
         efficiency[:self.num_old]=math.inf
         sorted_indices_by_efficiency = torch.argsort(efficiency, descending=True)
 
@@ -343,7 +344,7 @@ class RestoredSteps:
         # Finally, sort these selected items by their occurrences in descending order.
         # Note: We sort subset_occurrences, but we need to sort subset_indices based on these occurrences.
         sorted_indices_by_occurrences = subset_indices[torch.argsort(subset_occurrences, descending=True)]
-
+                                                                                                                                                                      
         self.softmax[self.num_old+self.num_new:]=self.softmax[sorted_indices_by_occurrences]
         self.indices[self.num_old+self.num_new]=self.indices[sorted_indices_by_occurrences]
         self.losses[self.num_old+self.num_new]=self.losses[sorted_indices_by_occurrences]
